@@ -1,0 +1,653 @@
+﻿@model VietNOCMS.Models.ExploreCourseViewModel
+
+@{
+    ViewData["Title"] = "Khám phá khóa học";
+}
+
+@section Styles {
+    <style>
+        /* ... (CSS cũ của bạn) ... */
+        .explore-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem 0 2rem;
+            margin-top: 0px;
+            color: white;
+        }
+
+        .search-box-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 1.25rem 4rem 1.25rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+            .search-box:focus {
+                outline: none;
+                box-shadow: 0 10px 50px rgba(0, 0, 0, 0.2);
+            }
+
+        .search-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .search-btn:hover {
+                transform: translateY(-50%) scale(1.05);
+            }
+
+        .filter-sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 90px;
+        }
+
+        .filter-section {
+            margin-bottom: 2rem;
+        }
+
+        .filter-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+            .filter-option:hover {
+                background: #f8fafc;
+            }
+
+            .filter-option input[type="radio"] {
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+                accent-color: #667eea;
+            }
+
+            .filter-option label {
+                cursor: pointer;
+                margin: 0;
+                flex: 1;
+            }
+
+        .course-discover-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .course-discover-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            }
+
+        .course-discover-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            position: relative;
+        }
+
+        .course-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            padding: 0.5rem 1rem;
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            z-index: 2;
+        }
+
+            .course-badge.new {
+                background: linear-gradient(135deg, #10b981, #059669);
+            }
+
+        .rating-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 600;
+            z-index: 2;
+        }
+
+        .course-discover-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .course-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .course-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .course-discover-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .course-description {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .course-footer {
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 2px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .course-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .course-price-old {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            text-decoration: line-through;
+            margin-right: 0.5rem;
+        }
+
+        .course-price.free {
+            color: #10b981;
+        }
+
+        .btn-enroll {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+            .btn-enroll:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+                color: white;
+            }
+
+        .sort-options {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 2rem;
+            justify-content: space-between;
+        }
+
+        .sort-select {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .category-pills {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .category-pill {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 25px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+            .category-pill:hover, .category-pill.active {
+                background: white;
+                color: #667eea;
+            }
+
+        .page-item.active .page-link {
+            background-color: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        @@media (max-width: 768px) {
+            .filter-sidebar {
+                position: static;
+                margin-bottom: 2rem;
+            }
+
+            .sort-options {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+}
+
+<div class="explore-header">
+    <div class="container">
+        <h1 class="text-center mb-4"><i class="bi bi-compass"></i> Khám phá khóa học</h1>
+
+        <form method="get" asp-action="ExploreCourse" class="search-box-wrapper mb-4">
+            <input type="text" name="search" class="search-box" placeholder="Tìm kiếm khóa học, giảng viên..." value="@Model.SearchQuery">
+            <button type="submit" class="search-btn"><i class="bi bi-search"></i></button>
+
+            @if (Model.CategoryId.HasValue)
+            {
+                <input type="hidden" name="categoryId" value="@Model.CategoryId" />
+            }
+            @if (!string.IsNullOrEmpty(Model.Level))
+            {
+                <input type="hidden" name="level" value="@Model.Level" />
+            }
+            <input type="hidden" name="sort" value="@Model.SortBy" />
+        </form>
+
+        <div class="category-pills justify-content-center">
+            <a href="@Url.Action("ExploreCourse", new { search = Model.SearchQuery })"
+               class="category-pill @(!Model.CategoryId.HasValue ? "active" : "")">Tất cả</a>
+
+            @foreach (var cat in Model.Categories)
+            {
+                <a href="@Url.Action("ExploreCourse", new { categoryId = cat.CategoryId, search = Model.SearchQuery, level = Model.Level, sort = Model.SortBy })"
+                   class="category-pill @(Model.CategoryId == cat.CategoryId ? "active" : "")">
+                    @cat.CategoryName
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-3">
+            <form method="get" asp-action="ExploreCourse" id="filterForm">
+                <input type="hidden" name="search" value="@Model.SearchQuery" />
+                <input type="hidden" name="sort" value="@Model.SortBy" />
+
+                @if (Model.CategoryId.HasValue)
+                {
+                    <input type="hidden" name="categoryId" value="@Model.CategoryId" />
+                }
+
+                <div class="filter-sidebar">
+                    <h3 class="filter-title"><i class="bi bi-funnel"></i> Bộ lọc</h3>
+
+                    <div class="filter-section">
+                        <h4 class="filter-title">Cấp độ</h4>
+
+                        <div class="filter-option">
+                            <input type="radio" name="level" value="" id="lvl_all"
+                                   @(string.IsNullOrEmpty(Model.Level) ? "checked" : "")
+                                   onchange="this.form.submit()">
+                            <label for="lvl_all">Tất cả</label>
+                        </div>
+
+                        <div class="filter-option">
+                            <input type="radio" name="level" value="Beginner" id="lvl_beg"
+                                   @(Model.Level == "Beginner" ? "checked" : "")
+                                   onchange="this.form.submit()">
+                            <label for="lvl_beg">Cơ bản</label>
+                        </div>
+
+                        <div class="filter-option">
+                            <input type="radio" name="level" value="Intermediate" id="lvl_int"
+                                   @(Model.Level == "Intermediate" ? "checked" : "")
+                                   onchange="this.form.submit()">
+                            <label for="lvl_int">Trung cấp</label>
+                        </div>
+
+                        <div class="filter-option">
+                            <input type="radio" name="level" value="Advanced" id="lvl_adv"
+                                   @(Model.Level == "Advanced" ? "checked" : "")
+                                   onchange="this.form.submit()">
+                            <label for="lvl_adv">Nâng cao</label>
+                        </div>
+                    </div>
+
+                    <a href="@Url.Action("ExploreCourse")" class="btn btn-outline-secondary w-100 rounded-pill">
+                        <i class="bi bi-arrow-clockwise"></i> Đặt lại bộ lọc
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="sort-options">
+                <span class="results-count">Hiển thị <strong>@Model.Courses.Count</strong> khóa học</span>
+
+                <select class="sort-select" onchange="updateSort(this.value)">
+                    <option value="newest" selected="@(Model.SortBy == "newest" || string.IsNullOrEmpty(Model.SortBy))">Mới nhất</option>
+                    <option value="price_asc" selected="@(Model.SortBy == "price_asc")">Giá thấp đến cao</option>
+                    <option value="price_desc" selected="@(Model.SortBy == "price_desc")">Giá cao đến thấp</option>
+                </select>
+            </div>
+
+            <div class="row g-4">
+                @if (Model.Courses.Any())
+                {
+                    @foreach (var course in Model.Courses)
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <div class="course-discover-card">
+                                <div class="position-relative">
+                                    <div class="course-discover-image">
+                                        @if (!string.IsNullOrEmpty(course.Thumbnail))
+                                        {
+                                            <img src="~/uploads/@course.Thumbnail" alt="@course.CourseName" style="width:100%; height:100%; object-fit:cover;" />
+                                        }
+                                        else
+                                        {
+                                            <div style="background: linear-gradient(135deg, #667eea, #764ba2); width:100%; height:100%;"></div>
+                                        }
+                                    </div>
+
+                                    @if (course.CreatedAt > DateTime.Now.AddDays(-30))
+                                    {
+                                        <span class="course-badge new">Mới</span>
+                                    }
+
+                                    <span class="rating-badge">
+                                        <i class="bi bi-star-fill text-warning me-1"></i> 4.5
+                                    </span>
+                                </div>
+
+                                <div class="course-discover-content">
+                                    <div class="course-meta">
+                                        <span class="course-meta-item">
+                                            <i class="bi bi-book"></i>
+                                            @(course.Chapters?.Sum(c => c.Lessons?.Count ?? 0) ?? 0) bài
+                                        </span>
+                                        <span class="course-meta-item">
+                                            <i class="bi bi-clock"></i> @course.DurationInHours h
+                                        </span>
+                                    </div>
+
+                                    <h3 class="course-discover-title" title="@course.CourseName">@course.CourseName</h3>
+                                    <p class="text-muted small mb-2">
+                                        <i class="bi bi-person-circle"></i> @(course.Instructor?.FullName ?? "Admin")
+                                    </p>
+
+                                    <div class="course-footer">
+                                        <div>
+                                            @if (course.Price > 0)
+                                            {
+                                                if (course.DiscountPercent > 0)
+                                                {
+                                                    var finalPrice = course.Price * (100 - course.DiscountPercent) / 100;
+                                                    <span class="course-price">@finalPrice?.ToString("N0") đ</span>
+                                                    <span class="course-price-old">@course.Price.ToString("N0") đ</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="course-price">@course.Price.ToString("N0") đ</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="course-price free">Miễn phí</span>
+                                            }
+                                        </div>
+
+                                        <button class="btn-enroll" onclick="showCourseModal({
+                                                            id: @course.CourseId,
+                                                            title: '@System.Web.HttpUtility.JavaScriptStringEncode(course.CourseName)',
+                                                            desc: '@System.Web.HttpUtility.JavaScriptStringEncode(course.ShortDescription ?? "")',
+                                                            price: @course.Price,
+                                                            discount: @(course.DiscountPercent ?? 0),
+                                                            image: '@(string.IsNullOrEmpty(course.Thumbnail) ? "" : Url.Content("~/uploads/" + course.Thumbnail))',
+                                                            category: '@System.Web.HttpUtility.JavaScriptStringEncode(course.Category?.CategoryName ?? "")',
+                                                            instructor: '@System.Web.HttpUtility.JavaScriptStringEncode(course.Instructor?.FullName ?? "Admin")',
+                                                            level: '@course.Level',
+                                                            lessons: @(course.Chapters?.Sum(c => c.Lessons?.Count ?? 0) ?? 0),
+                                                            duration: @course.DurationInHours,
+                                                            rating: 4.5
+                                                        })">
+                                            <i class="bi bi-eye"></i> Xem nhanh
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12 text-center py-5">
+                        <div class="text-muted fs-5"><i class="bi bi-search"></i> Không tìm thấy khóa học nào phù hợp.</div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <div class="d-flex justify-content-center mt-5">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("ExploreCourse", new { page = Model.CurrentPage - 1, search = Model.SearchQuery, categoryId = Model.CategoryId, level = Model.Level, sort = Model.SortBy })"><i class="bi bi-chevron-left"></i></a>
+                            </li>
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("ExploreCourse", new { page = i, search = Model.SearchQuery, categoryId = Model.CategoryId, level = Model.Level, sort = Model.SortBy })">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("ExploreCourse", new { page = Model.CurrentPage + 1, search = Model.SearchQuery, categoryId = Model.CategoryId, level = Model.Level, sort = Model.SortBy })"><i class="bi bi-chevron-right"></i></a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="courseDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header border-0 p-0 position-relative">
+                <div class="ratio ratio-16x9 bg-dark">
+                    <img id="modalThumbnail" src="" class="object-fit-cover" alt="Course Thumbnail">
+                    <div class="position-absolute top-50 start-50 translate-middle text-white text-center" style="pointer-events: none;">
+                        <i class="bi bi-play-circle-fill" style="font-size: 4rem; opacity: 0.8;"></i>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 p-2 bg-dark rounded-circle bg-opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-primary mb-2" id="modalCategory">Web Development</span>
+                        <h2 class="fw-bold mb-1" id="modalTitle">Tên khóa học</h2>
+                        <div class="text-muted small">
+                            <i class="bi bi-person-circle me-1"></i> <span id="modalInstructor">Giảng viên</span>
+                            <span class="mx-2">•</span>
+                            <i class="bi bi-star-fill text-warning"></i> <span id="modalRating">4.8</span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <h3 class="text-primary fw-bold mb-0" id="modalPrice">999.000 đ</h3>
+                        <span class="text-decoration-line-through text-muted small" id="modalOldPrice"></span>
+                    </div>
+                </div>
+                <p class="text-muted mb-4" id="modalDescription">Mô tả ngắn về khóa học...</p>
+                <div class="row g-3 mb-4">
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded-3 text-center">
+                            <i class="bi bi-journal-text text-primary fs-4 mb-1"></i>
+                            <div class="fw-bold" id="modalLessons">0</div>
+                            <div class="small text-muted">Bài học</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded-3 text-center">
+                            <i class="bi bi-clock text-primary fs-4 mb-1"></i>
+                            <div class="fw-bold" id="modalDuration">0h</div>
+                            <div class="small text-muted">Thời lượng</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded-3 text-center">
+                            <i class="bi bi-bar-chart text-primary fs-4 mb-1"></i>
+                            <div class="fw-bold" id="modalLevel">Beginner</div>
+                            <div class="small text-muted">Cấp độ</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="#" id="modalEnrollBtn" class="btn btn-primary btn-lg fw-bold py-3" style="background: linear-gradient(135deg, #667eea, #764ba2); border:none;">
+                        Đăng ký ngay
+                    </a>
+                    <a href="#" id="modalDetailLink" class="btn btn-outline-secondary fw-bold">
+                        Xem chi tiết đầy đủ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 1. Hàm cập nhật Sort (Sửa lại để cập nhật trực tiếp URL)
+        function updateSort(sortValue) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('sort', sortValue);
+            urlParams.set('page', 1); // Reset về trang 1 khi đổi sắp xếp
+            window.location.search = urlParams.toString();
+        }
+
+        // 2. Hàm hiển thị Modal "Xem Nhanh" (Giữ nguyên)
+        function showCourseModal(data) {
+            document.getElementById('modalTitle').innerText = data.title;
+            document.getElementById('modalDescription').innerText = data.desc;
+            document.getElementById('modalCategory').innerText = data.category;
+            document.getElementById('modalInstructor').innerText = data.instructor;
+            document.getElementById('modalLevel').innerText = data.level;
+            document.getElementById('modalLessons').innerText = data.lessons;
+            document.getElementById('modalDuration').innerText = data.duration + 'h';
+            document.getElementById('modalRating').innerText = data.rating;
+
+            const img = document.getElementById('modalThumbnail');
+            if (data.image) {
+                img.src = data.image;
+                img.style.display = 'block';
+            } else {
+                img.src = 'https://via.placeholder.com/800x450?text=No+Image';
+            }
+
+            const priceEl = document.getElementById('modalPrice');
+            const oldPriceEl = document.getElementById('modalOldPrice');
+
+            if (data.price > 0) {
+                const formatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+                if (data.discount > 0) {
+                    const discountedPrice = data.price * (100 - data.discount) / 100;
+                    priceEl.innerText = formatter.format(discountedPrice);
+                    oldPriceEl.innerText = formatter.format(data.price);
+                    oldPriceEl.style.display = 'inline';
+                } else {
+                    priceEl.innerText = formatter.format(data.price);
+                    oldPriceEl.style.display = 'none';
+                }
+                priceEl.classList.remove('text-success');
+                priceEl.classList.add('text-primary');
+            } else {
+                priceEl.innerText = 'Miễn phí';
+                priceEl.classList.remove('text-primary');
+                priceEl.classList.add('text-success');
+                oldPriceEl.style.display = 'none';
+            }
+
+            document.getElementById('modalEnrollBtn').href = '/Enroll/Checkout?courseId=' + data.id;
+            document.getElementById('modalDetailLink').href = '/Courses/Details/' + data.id;
+
+            const modal = new bootstrap.Modal(document.getElementById('courseDetailModal'));
+            modal.show();
+        }
+    </script>
+}

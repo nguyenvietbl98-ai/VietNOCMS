@@ -1,0 +1,651 @@
+﻿@model PublishCourseViewModel
+
+@{
+    ViewData["Title"] = "Xuất bản khóa học - Giảng viên";
+}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+@section Styles {
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem 0;
+            margin-top: 70px;
+            color: white;
+        }
+
+        .publish-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+
+        .progress-indicator {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+            .progress-step::before {
+                content: '';
+                position: absolute;
+                top: 15px;
+                left: 50%;
+                right: -50%;
+                height: 2px;
+                background: #059669;
+                z-index: 0;
+            }
+
+            .progress-step:last-child::before {
+                display: none;
+            }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #059669;
+            color: white;
+            border: 2px solid #059669;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-label {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .review-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .course-preview {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-light);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .preview-image {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .preview-info h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .preview-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+        }
+
+            .meta-item i {
+                color: #059669;
+            }
+
+        .price-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #059669;
+            margin: 1rem 0;
+        }
+
+        .old-price {
+            text-decoration: line-through;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            margin-left: 1rem;
+        }
+
+        .checklist-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border-left: 4px solid #059669;
+            margin-bottom: 1rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+            .checklist-item:hover {
+                background: var(--bg-light);
+            }
+
+        .check-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .check-complete {
+            background: #059669;
+            color: white;
+        }
+
+        .check-incomplete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .check-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .item-text {
+            flex: 1;
+        }
+
+        .item-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-desc {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #059669;
+        }
+
+        .badge-error {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+
+        .terms-section {
+            background: #fffbeb;
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .terms-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            color: #d97706;
+            margin-bottom: 1rem;
+        }
+
+        .terms-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+            .terms-list li {
+                padding: 0.5rem 0;
+                display: flex;
+                align-items: start;
+                gap: 0.5rem;
+            }
+
+                .terms-list li::before {
+                    content: "✓";
+                    color: #059669;
+                    font-weight: 700;
+                }
+
+        .terms-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+            .terms-checkbox input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+            }
+
+            .terms-checkbox label {
+                cursor: pointer;
+                margin: 0;
+                font-weight: 600;
+            }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        .btn-publish {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            font-size: 1.1rem;
+            padding: 1rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+            .btn-publish:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 16px rgba(5, 150, 105, 0.3);
+            }
+
+            .btn-publish:disabled {
+                background: var(--text-light);
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        .success-animation {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            color: #059669;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @@keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #059669;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        @@media (max-width: 768px) {
+            .course-preview {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="container">
+        <h1 class="text-center mb-2"><i class="bi bi-rocket-takeoff"></i> Xuất bản khóa học</h1>
+        <p class="text-center mb-0 opacity-75">Xem lại và xuất bản khóa học của bạn</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="publish-container">
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div class="progress-steps">
+                <div class="progress-step">
+                    <div class="step-number">✓</div>
+                    <div class="step-label">Thông tin cơ bản</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-number">✓</div>
+                    <div class="step-label">Thêm nội dung</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Xuất bản</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Preview -->
+        <div class="review-card">
+            <h2 class="card-title">
+                <i class="bi bi-eye"></i>
+                Xem trước khóa học
+            </h2>
+
+            <div class="course-preview">
+                <div>
+                    <img src="@Model.CourseImageUrl" alt="@Model.CourseName" class="preview-image" />
+                </div>
+                <div class="preview-info">
+                    <h3>@Model.CourseName</h3>
+                    <p>@Model.ShortDescription</p>
+
+                    <div class="preview-meta">
+                        <div class="meta-item">
+                            <i class="bi bi-bookmark"></i>
+                            <span>@Model.CategoryName</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-bar-chart-steps"></i>
+                            <span>@Model.Level</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-clock"></i>
+                            <span>@Model.TotalDuration phút</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-collection-play"></i>
+                            <span>@Model.TotalLessons bài học</span>
+                        </div>
+                    </div>
+
+                    @if (Model.CourseType == "Paid")
+                    {
+                        <div class="price-display">
+                            @Model.DiscountPrice?.ToString("N0") VNĐ
+                            @if (Model.DiscountPrice.HasValue && Model.DiscountPrice < Model.Price)
+                            {
+                                <span class="old-price">@Model.Price?.ToString("N0") VNĐ</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="price-display">MIỄN PHÍ</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Readiness Checklist -->
+        <div class="review-card">
+            <h2 class="card-title">
+                <i class="bi bi-clipboard-check"></i>
+                Kiểm tra độ sẵn sàng
+            </h2>
+
+            <div class="checklist-card">
+                <div class="checklist-item">
+                    <div class="check-icon @(Model.HasBasicInfo ? "check-complete" : "check-incomplete")">
+                        <i class="bi bi-@(Model.HasBasicInfo ? "check" : "x")"></i>
+                    </div>
+                    <div class="item-text">
+                        <div class="item-title">Thông tin cơ bản</div>
+                        <div class="item-desc">Tên, mô tả, danh mục, cấp độ</div>
+                    </div>
+                    <span class="status-badge @(Model.HasBasicInfo ? "badge-success" : "badge-error")">
+                        @(Model.HasBasicInfo ? "Hoàn thành" : "Chưa đầy đủ")
+                    </span>
+                </div>
+
+                <div class="checklist-item">
+                    <div class="check-icon @(Model.HasCourseImage ? "check-complete" : "check-incomplete")">
+                        <i class="bi bi-@(Model.HasCourseImage ? "check" : "x")"></i>
+                    </div>
+                    <div class="item-text">
+                        <div class="item-title">Hình ảnh đại diện</div>
+                        <div class="item-desc">Ảnh thu hút và chuyên nghiệp</div>
+                    </div>
+                    <span class="status-badge @(Model.HasCourseImage ? "badge-success" : "badge-error")">
+                        @(Model.HasCourseImage ? "Hoàn thành" : "Thiếu ảnh")
+                    </span>
+                </div>
+
+                <div class="checklist-item">
+                    <div class="check-icon @(Model.HasMinimumLessons ? "check-complete" : "check-warning")">
+                        <i class="bi bi-@(Model.HasMinimumLessons ? "check" : "exclamation-triangle")"></i>
+                    </div>
+                    <div class="item-text">
+                        <div class="item-title">Nội dung bài học</div>
+                        <div class="item-desc">Tối thiểu 5 bài học (@Model.TotalLessons bài)</div>
+                    </div>
+                    <span class="status-badge @(Model.HasMinimumLessons ? "badge-success" : "badge-warning")">
+                        @(Model.HasMinimumLessons ? "Đạt yêu cầu" : "Cần thêm")
+                    </span>
+                </div>
+
+                <div class="checklist-item">
+                    <div class="check-icon @(Model.HasSections ? "check-complete" : "check-incomplete")">
+                        <i class="bi bi-@(Model.HasSections ? "check" : "x")"></i>
+                    </div>
+                    <div class="item-text">
+                        <div class="item-title">Cấu trúc chương</div>
+                        <div class="item-desc">Ít nhất 2 chương (@Model.TotalSections chương)</div>
+                    </div>
+                    <span class="status-badge @(Model.HasSections ? "badge-success" : "badge-error")">
+                        @(Model.HasSections ? "Hoàn thành" : "Chưa đủ")
+                    </span>
+                </div>
+
+                <div class="checklist-item">
+                    <div class="check-icon @(Model.HasPricing ? "check-complete" : "check-incomplete")">
+                        <i class="bi bi-@(Model.HasPricing ? "check" : "x")"></i>
+                    </div>
+                    <div class="item-text">
+                        <div class="item-title">Thông tin giá</div>
+                        <div class="item-desc">Xác định loại và giá khóa học</div>
+                    </div>
+                    <span class="status-badge @(Model.HasPricing ? "badge-success" : "badge-error")">
+                        @(Model.HasPricing ? "Hoàn thành" : "Chưa đặt")
+                    </span>
+                </div>
+            </div>
+
+            @if (Model.IsReadyToPublish)
+            {
+                <div class="alert alert-success d-flex align-items-center mt-3">
+                    <i class="bi bi-check-circle-fill me-2" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Tuyệt vời!</strong> Khóa học của bạn đã sẵn sàng để xuất bản.
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning d-flex align-items-center mt-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 1.5rem;"></i>
+                    <div>
+                        Vui lòng hoàn thành các mục chưa đầy đủ trước khi xuất bản.
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Course Statistics -->
+        <div class="review-card">
+            <h2 class="card-title">
+                <i class="bi bi-graph-up"></i>
+                Thống kê khóa học
+            </h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">@Model.TotalSections</div>
+                    <div class="stat-label">Số chương</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">@Model.TotalLessons</div>
+                    <div class="stat-label">Số bài học</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">@Model.TotalDuration</div>
+                    <div class="stat-label">Tổng phút</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">@Model.FreePreviewCount</div>
+                    <div class="stat-label">Bài xem trước</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terms and Conditions -->
+        <div class="terms-section">
+            <div class="terms-title">
+                <i class="bi bi-shield-check"></i>
+                Điều khoản xuất bản
+            </div>
+            <ul class="terms-list">
+                <li>Tôi xác nhận nội dung khóa học là do tôi tạo ra hoặc có quyền sử dụng hợp pháp</li>
+                <li>Nội dung không vi phạm bản quyền, thương hiệu hay quyền sở hữu trí tuệ của bên thứ ba</li>
+                <li>Khóa học không chứa nội dung bạo lực, phân biệt đối xử hay vi phạm pháp luật</li>
+                <li>Tôi đồng ý tuân thủ các chính sách và quy định của nền tảng</li>
+                <li>Tôi hiểu rằng nền tảng có quyền gỡ bỏ khóa học nếu vi phạm quy định</li>
+            </ul>
+
+            <div class="terms-checkbox">
+                <input type="checkbox" id="agreeTerms" onchange="togglePublishButton()" />
+                <label for="agreeTerms">Tôi đã đọc và đồng ý với các điều khoản trên</label>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <form asp-action="PublishCourse" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="CourseId" />
+
+            <div class="action-buttons">
+                <a href="@Url.Action("AddContent", "Instructor", new { id = Model.CourseId })" class="btn btn-outline-custom">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+                <div class="d-flex gap-2">
+                    <button type="submit" name="action" value="draft" class="btn btn-secondary">
+                        <i class="bi bi-file-earmark"></i> Lưu nháp
+                    </button>
+                    <button type="submit" name="action" value="publish" class="btn btn-publish"
+                            id="publishBtn" disabled="@(!Model.IsReadyToPublish)">
+                        <i class="bi bi-rocket-takeoff"></i> Xuất bản khóa học
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePublishButton() {
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            const isReady = @Model.IsReadyToPublish.ToString().ToLower();
+            const publishBtn = document.getElementById('publishBtn');
+
+            publishBtn.disabled = !(agreeTerms && isReady);
+        }
+
+        // Show success message if redirected after publishing
+        @if (TempData["PublishSuccess"] != null)
+        {
+                <text>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Xuất bản thành công!',
+                    html: '<div class="success-animation"><div class="success-icon">🎉</div><h3>Chúc mừng!</h3><p>Khóa học của bạn đã được xuất bản thành công.</p></div>',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Xem khóa học',
+                    showCancelButton: true,
+                    cancelButtonText: 'Về trang chủ'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '@Url.Action("Details", "Course", new { id = Model.CourseId })';
+                    } else {
+                        window.location.href = '@Url.Action("MyCourses", "Instructor")';
+                    }
+                });
+                </text>
+        }
+    </script>
+}

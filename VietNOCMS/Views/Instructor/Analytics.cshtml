@@ -1,0 +1,566 @@
+﻿@model VietNOCMS.Models.InstructorAnalyticsViewModel
+
+@{
+    ViewData["Title"] = "Kinh doanh & Hiệu quả giảng dạy";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+
+        .business-dashboard {
+            padding: 2rem 0;
+            background: var(--bg-light);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--instructor-color), #10b981);
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(5, 150, 105, 0.2);
+        }
+
+            .page-header h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+
+            .page-header p {
+                font-size: 1rem;
+                opacity: 0.9;
+                margin: 0;
+            }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 4px;
+                height: 100%;
+                background: var(--instructor-color);
+                transition: width 0.3s ease;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            }
+
+                .stat-card:hover::before {
+                    width: 8px;
+                }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+            .stat-icon.revenue {
+                background: linear-gradient(135deg, #059669, #10b981);
+            }
+
+            .stat-icon.students {
+                background: linear-gradient(135deg, #2563eb, #3b82f6);
+            }
+
+            .stat-icon.rating {
+                background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            }
+
+            .stat-icon.courses {
+                background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+        }
+
+            .stat-trend.up {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .stat-trend.down {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+
+        .stat-content h3 {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        /* Chart Section */
+        .chart-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+            .chart-header h2 {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: var(--text-dark);
+                margin: 0;
+            }
+
+        .time-filters {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .time-filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .time-filter-btn:hover {
+                border-color: var(--instructor-color);
+                color: var(--instructor-color);
+            }
+
+            .time-filter-btn.active {
+                background: var(--instructor-color);
+                color: white;
+                border-color: var(--instructor-color);
+            }
+
+        .chart-container {
+            height: 350px;
+            position: relative;
+        }
+
+        /* Course Distribution */
+        .course-distribution {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .course-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+            .course-item:hover {
+                background: white;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            }
+
+        .course-color {
+            width: 12px;
+            height: 60px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .course-info {
+            flex: 1;
+        }
+
+        .course-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        .course-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .course-percentage {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* Recent Activity */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+            .activity-item:hover {
+                background: white;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+            .activity-icon.new-student {
+                background: #dbeafe;
+                color: #1e40af;
+            }
+
+            .activity-icon.revenue {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .activity-icon.review {
+                background: #fef3c7;
+                color: #92400e;
+            }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .activity-time {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            white-space: nowrap;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .time-filters {
+                width: 100%;
+                overflow-x: auto;
+            }
+
+            .course-distribution {
+                grid-template-columns: 1fr;
+            }
+        }
+    
+        .activity-description b {
+            font-weight: 600;
+            color: #333;
+        }
+    </style>
+}
+
+<div class="business-dashboard">
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="bi bi-graph-up-arrow"></i> Kinh doanh & Hiệu quả giảng dạy</h1>
+            <p>Theo dõi doanh thu, học viên và hiệu quả của các khóa học</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon revenue"><i class="bi bi-cash-coin"></i></div>
+                    @if (Model.RevenueGrowth >= 0)
+                    {
+                        <div class="stat-trend up"><i class="bi bi-arrow-up"></i> @Model.RevenueGrowth%</div>
+                    }
+                    else
+                    {
+                        <div class="stat-trend down"><i class="bi bi-arrow-down"></i> @Model.RevenueGrowth%</div>
+                    }
+                </div>
+                <div class="stat-content">
+                    <h3>Tổng doanh thu</h3>
+                    <div class="stat-value">@Model.TotalRevenue.ToString("N0")₫</div>
+                    <div class="stat-subtitle">Tăng trưởng so với tháng trước</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon students"><i class="bi bi-person-plus"></i></div>
+                    <div class="stat-trend up"><i class="bi bi-calendar-check"></i> Tháng này</div>
+                </div>
+                <div class="stat-content">
+                    <h3>Học viên mới</h3>
+                    <div class="stat-value">@Model.NewStudentsMonth</div>
+                    <div class="stat-subtitle">Đăng ký trong 30 ngày qua</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon rating"><i class="bi bi-star-fill"></i></div>
+                </div>
+                <div class="stat-content">
+                    <h3>Đánh giá trung bình</h3>
+                    <div class="stat-value">@Model.AverageRating <small class="text-muted fs-6">/ 5.0</small></div>
+                    <div class="stat-subtitle">Từ @Model.TotalRatingCount đánh giá</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon courses"><i class="bi bi-people-fill"></i></div>
+                </div>
+                <div class="stat-content">
+                    <h3>Tổng lượt đăng ký</h3>
+                    <div class="stat-value">@Model.TotalStudents</div>
+                    <div class="stat-subtitle">Trên tất cả khóa học</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="chart-section h-100">
+                    <div class="chart-header">
+                        <h2><i class="bi bi-graph-up"></i> Doanh thu theo thời gian</h2>
+                        <div class="time-filters">
+                            <button class="time-filter-btn active">4 Tuần</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <div class="chart-section h-100">
+                    <div class="chart-header">
+                        <h2><i class="bi bi-clock-history"></i> Hoạt động mới</h2>
+                    </div>
+                    <div class="activity-list">
+                        @if (Model.Activities.Any())
+                        {
+                            @foreach (var act in Model.Activities)
+                            {
+                                <div class="activity-item">
+                                    <div class="activity-icon @(act.Type == "Revenue" ? "revenue" : act.Type == "Review" ? "review" : "new-student")">
+                                        @if (act.Type == "Review")
+                                        {
+                                            <i class="bi bi-star-fill"></i>
+                                        }
+                                        else if (act.Type == "Revenue")
+                                        {
+
+                                            <i class="bi bi-cash"></i>
+                                        }
+                                        else
+                                        {
+
+                                            <i class="bi bi-person-plus-fill"></i>
+                                        }
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">@act.Title</div>
+                                        <div class="activity-description">@Html.Raw(act.Description)</div>
+                                    </div>
+                                    <div class="activity-time">@act.TimeDisplay</div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center">Chưa có hoạt động nào.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-header">
+                <h2><i class="bi bi-pie-chart-fill"></i> Phân bổ học viên theo khóa học</h2>
+            </div>
+            <div class="course-distribution">
+                @if (Model.TopCourses.Any())
+                {
+                    @foreach (var course in Model.TopCourses)
+                    {
+                        <div class="course-item">
+                            <div class="course-color" style="background: @course.ColorCode;"></div>
+                            <div class="course-info">
+                                <div class="course-name">@course.CourseName</div>
+                                <div class="course-stats">
+                                    <span><i class="bi bi-people"></i> @course.StudentCount học viên</span>
+                                    <span><i class="bi bi-cash"></i> @course.Revenue.ToString("N0")₫</span>
+                                </div>
+                            </div>
+                            <div class="course-percentage">@course.Percentage%</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">Chưa có dữ liệu khóa học.</p>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+
+        // Dữ liệu từ Server
+        const labels = @Html.Raw(Json.Serialize(Model.ChartLabels));
+        const data = @Html.Raw(Json.Serialize(Model.RevenueData));
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: data,
+                    borderColor: '#059669',
+                    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    pointBackgroundColor: '#059669'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: {
+                            callback: function(value) {
+                                return value >= 1000000 ? (value/1000000) + 'M' : value;
+                            }
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+}

@@ -1,0 +1,100 @@
+﻿@model IEnumerable<VietNOCMS.Models.Enrollment>
+@{
+    ViewData["Title"] = "Sổ Điểm: " + ViewBag.CourseName;
+    var assignments = ViewBag.Assignments as List<VietNOCMS.Models.Lesson>;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">@ViewBag.CourseName</h3>
+            <p class="text-muted">Bảng theo dõi kết quả học tập</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="calculateGrades(@ViewBag.CourseId)" class="btn btn-primary">
+                <i class="bi bi-calculator"></i> Tính điểm tổng kết
+            </button>
+            <a href="/Gradebook/ExportExcel?courseId=@ViewBag.CourseId" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Học viên</th>
+                            @foreach (var ass in assignments)
+                            {
+                                <th class="text-center" style="min-width: 100px;">@ass.LessonName</th>
+                            }
+                            <th class="text-center bg-primary text-white">Tổng kết</th>
+                            <th class="text-center bg-primary text-white">Xếp loại</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">@item.Student.FullName</div>
+                                    <small class="text-muted">@item.Student.Email</small>
+                                </td>
+
+                                @foreach (var ass in assignments)
+                                {
+                                    <td class="text-center text-muted">-</td>
+                                  
+                                }
+
+                                <td class="text-center fw-bold fs-5">
+                                    @(item.FinalScore.HasValue? item.FinalScore.Value.ToString() : "--")
+                                </td>
+                                <td class="text-center">
+                                    @if (!string.IsNullOrEmpty(item.Rank))
+                                    {
+                                        var badgeClass = item.Rank == "Xuất sắc" || item.Rank == "Giỏi" ? "bg-success" :
+                                        (item.Rank == "Yếu" ? "bg-danger" : "bg-warning text-dark");
+                                        <span class="badge @badgeClass">@item.Rank</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">--</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function calculateGrades(courseId) {
+            Swal.fire({
+                title: 'Tính điểm tổng kết?',
+                text: "Hệ thống sẽ tính lại điểm trung bình cho toàn bộ học viên.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Thực hiện'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.showLoading();
+                    $.post('/Gradebook/CalculateGrades', { courseId: courseId }, function(res) {
+                        if(res.success) {
+                            Swal.fire('Thành công', res.message, 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

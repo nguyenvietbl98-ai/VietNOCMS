@@ -1,0 +1,109 @@
+﻿@model VietNOCMS.Models.CourseViewModel
+
+@{
+    ViewData["Title"] = "Xác nhận đăng ký";
+}
+
+<div class="container page-container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card-custom animate-slide-up border-0 shadow-sm">
+                <div class="text-center mb-4 pt-2">
+                    <h2 class="fw-bold text-gradient">Xác nhận tham gia</h2>
+                    <p class="text-muted">Bạn đang đăng ký khóa học sau</p>
+                </div>
+
+                <div class="row g-0 align-items-center bg-light rounded-4 overflow-hidden mb-4 border">
+                    <div class="col-md-4 position-relative" style="min-height: 180px;">
+                        @if (!string.IsNullOrEmpty(Model.Thumbnail))
+                        {
+                            <img src="~/uploads/@Model.Thumbnail" alt="@Model.CourseName" 
+                                 style="width: 100%; height: 100%; object-fit: cover; position: absolute;" />
+                        }
+                        else
+                        {
+                            <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 100%; height: 100%; position: absolute; display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-book text-white fs-1"></i>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="col-md-8 p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">
+                                @Model.CategoryName
+                            </span>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill">
+                                <i class="bi bi-bar-chart-fill me-1"></i> @Model.Level
+                            </span>
+                        </div>
+                        
+                        <h4 class="fw-bold text-dark mb-2">@Model.CourseName</h4>
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-person-circle me-1"></i> Giảng viên: <strong>@Model.InstructorName</strong>
+                        </p>
+                        <p class="text-muted small">
+                            <i class="bi bi-clock me-1"></i> Thời lượng: @Model.DurationInHours giờ
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 border rounded-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Giá gốc:</span>
+                        @if (Model.IsPaid)
+                        {
+                            <span class="fw-medium text-decoration-line-through text-muted">
+                                @Model.OriginalPrice.ToString("N0") đ
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="fw-medium">0 đ</span>
+                        }
+                    </div>
+
+                    @if (Model.IsPaid && Model.DiscountPercent > 0)
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-success"><i class="bi bi-tag-fill"></i> Giảm giá (@Model.DiscountPercent%):</span>
+                            <span class="text-success fw-bold">
+                                - @((Model.OriginalPrice - Model.FinalPrice).ToString("N0")) đ
+                            </span>
+                        </div>
+                    }
+
+                    <hr class="my-3 border-secondary border-opacity-10">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold fs-5 text-dark">Tổng thanh toán:</span>
+                        <span class="fw-bold fs-3 text-primary">
+                            @if (Model.FinalPrice > 0)
+                            {
+                                @Model.FinalPrice.ToString("N0") <small class="fs-6">đ</small>
+                            }
+                            else
+                            {
+                                <span class="text-success">Miễn phí</span>
+                            }
+                        </span>
+                    </div>
+                </div>
+
+                <form asp-action="Confirm" method="post">
+                    <input type="hidden" name="courseId" value="@Model.CourseId" />
+                    
+                    <div class="d-grid gap-3">
+                       <button type="submit" class="btn btn-primary-custom py-3 fs-5 shadow-sm">
+            <i class="bi bi-check-circle-fill me-2"></i> Xác nhận và Thanh toán bằng ví
+        </button>
+                        
+                        <a asp-controller="Student" asp-action="ExploreCourse" class="btn btn-outline-secondary border-0">
+                            <i class="bi bi-arrow-left me-2"></i> Hủy bỏ, tôi muốn xem thêm
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

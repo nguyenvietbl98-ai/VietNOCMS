@@ -1,0 +1,667 @@
+﻿@{
+    @model VietNOCMS.Models.WalletViewModel
+}
+
+<div class="page-container">
+    <div class="container">
+        <!-- Header Section -->
+        <div class="wallet-header animate-slide-up">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="page-title">
+                        <i class="bi bi-wallet2"></i> Ví của tôi
+                    </h1>
+                    <p class="page-subtitle">Quản lý số dư và giao dịch của bạn</p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <div class="balance-card">
+                        <div class="balance-label">Số dư khả dụng</div>
+                        <div class="balance-amount">@Model.CurrentBalance.ToString("N0")₫</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Wallet Section -->
+        <div class="row mt-4">
+            <!-- Left Column - Wallet Actions -->
+            <div class="col-lg-8">
+                <div class="card-custom animate-slide-up">
+                    <!-- Tab Navigation -->
+                    <ul class="nav nav-pills wallet-tabs" id="walletTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="deposit-tab" data-bs-toggle="pill"
+                                    data-bs-target="#deposit" type="button" role="tab">
+                                <i class="bi bi-plus-circle"></i>
+                                <span>Nạp tiền</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="withdraw-tab" data-bs-toggle="pill"
+                                    data-bs-target="#withdraw" type="button" role="tab">
+                                <i class="bi bi-cash-stack"></i>
+                                <span>Rút tiền</span>
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content mt-4" id="walletTabContent">
+                        <!-- Deposit Tab -->
+                        <div class="tab-pane fade show active" id="deposit" role="tabpanel">
+                            <form asp-action="Deposit" method="post">
+                                <!-- Quick Amount Selection -->
+                                <div class="quick-amounts mb-4">
+                                    <label class="form-label">Chọn nhanh số tiền</label>
+                                    <div class="row g-3">
+                                        <div class="col-4">
+                                            <div class="amount-option" data-amount="100000">
+                                                <div class="amount-value">100,000₫</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="amount-option" data-amount="200000">
+                                                <div class="amount-value">200,000₫</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="amount-option" data-amount="500000">
+                                                <div class="amount-value">500,000₫</div>
+                                                <div class="amount-badge">Phổ biến</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="amount-option" data-amount="1000000">
+                                                <div class="amount-value">1,000,000₫</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="amount-option" data-amount="2000000">
+                                                <div class="amount-value">2,000,000₫</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="amount-option" data-amount="5000000">
+                                                <div class="amount-value">5,000,000₫</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Custom Amount Input -->
+                                <div class="mb-4">
+                                    <label class="form-label">Hoặc nhập số tiền khác</label>
+                                    <div class="input-group input-amount">
+                                        <input type="text" class="form-control" id="depositAmount"
+                                               name="Amount" placeholder="Nhập số tiền" required>
+                                        <span class="input-group-text">₫</span>
+                                    </div>
+                                    <small class="text-muted">Số tiền tối thiểu: 50,000₫</small>
+                                </div>
+
+                                <!-- Payment Method -->
+                                <div class="mb-4">
+                                    <label class="form-label">Phương thức thanh toán</label>
+                                    <div class="payment-methods">
+                                        <label class="payment-method active">
+                                            <input type="radio" name="PaymentMethod" value="bank" checked>
+                                            <div class="method-content">
+                                                <i class="bi bi-bank"></i>
+                                                <span>Chuyển khoản ngân hàng</span>
+                                            </div>
+                                        </label>
+                                        <label class="payment-method">
+                                            <input type="radio" name="PaymentMethod" value="momo">
+                                            <div class="method-content">
+                                                <i class="bi bi-phone"></i>
+                                                <span>Ví MoMo</span>
+                                            </div>
+                                        </label>
+                                        <label class="payment-method">
+                                            <input type="radio" name="PaymentMethod" value="card">
+                                            <div class="method-content">
+                                                <i class="bi bi-credit-card"></i>
+                                                <span>Thẻ ATM/Visa</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" class="btn btn-primary-custom w-100">
+                                    <i class="bi bi-plus-circle"></i> Tiếp tục nạp tiền
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Withdraw Tab -->
+                        <div class="tab-pane fade" id="withdraw" role="tabpanel">
+                            <form asp-action="Withdraw" method="post">
+                                <!-- Available Balance Info -->
+                                <div class="alert alert-info mb-4">
+                                    <i class="bi bi-info-circle"></i>
+                                    Số dư khả dụng để rút: <strong>2,500,000₫</strong>
+                                </div>
+
+                                <!-- Withdraw Amount -->
+                                <div class="mb-4">
+                                    <label class="form-label">Số tiền muốn rút</label>
+                                    <div class="input-group input-amount">
+                                        <input type="text" class="form-control" id="withdrawAmount"
+                                               name="Amount" placeholder="Nhập số tiền" required>
+                                        <span class="input-group-text">₫</span>
+                                    </div>
+                                    <small class="text-muted">Số tiền tối thiểu: 100,000₫ | Tối đa: 50,000,000₫/ngày</small>
+                                </div>
+
+                                <!-- Bank Account Info -->
+                                <div class="mb-4">
+                                    <label class="form-label">Tài khoản ngân hàng</label>
+                                    <select class="form-select" name="BankAccountId" required>
+                                        <option value="">Chọn tài khoản nhận tiền</option>
+                                        <option value="1">Vietcombank - **** 1234</option>
+                                        <option value="2">Techcombank - **** 5678</option>
+                                    </select>
+                                    <a href="#" class="small text-primary mt-2 d-inline-block">
+                                        <i class="bi bi-plus-circle"></i> Thêm tài khoản mới
+                                    </a>
+                                </div>
+
+                                <!-- Note -->
+                                <div class="mb-4">
+                                    <label class="form-label">Ghi chú (không bắt buộc)</label>
+                                    <textarea class="form-control" name="Note" rows="3"
+                                              placeholder="Nhập ghi chú cho giao dịch này"></textarea>
+                                </div>
+
+                                <!-- Withdraw Fee Info -->
+                                <div class="fee-info mb-4">
+                                    <div class="fee-row">
+                                        <span>Số tiền rút:</span>
+                                        <span id="withdrawAmountDisplay">0₫</span>
+                                    </div>
+                                    <div class="fee-row">
+                                        <span>Phí giao dịch:</span>
+                                        <span class="text-success">Miễn phí</span>
+                                    </div>
+                                    <div class="fee-row total">
+                                        <span>Tổng cộng:</span>
+                                        <span id="totalWithdraw">0₫</span>
+                                    </div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" class="btn btn-primary-custom w-100">
+                                    <i class="bi bi-cash-stack"></i> Xác nhận rút tiền
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Transaction History -->
+            <div class="col-lg-4">
+                <div class="card-custom animate-slide-up">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-clock-history"></i> Lịch sử giao dịch
+                    </h5>
+                    <div class="transaction-list">
+                        @foreach (var item in Model.Transactions)
+                        {
+                            var typeClass = item.Type.ToLower(); // deposit, withdraw, payment
+                            var amountPrefix = item.Type == "Deposit" ? "+" : "-";
+                            var amountClass = item.Type == "Deposit" ? "positive" : "negative";
+
+                            <div class="transaction-item @typeClass">
+                                <div class="transaction-icon">
+                                    <i class="bi @(item.Type == "Deposit" ? "bi-arrow-down-circle" : "bi-arrow-up-circle")"></i>
+                                </div>
+                                <div class="transaction-info">
+                                    <div class="transaction-title">@item.Description</div>
+                                    <div class="transaction-time">@item.CreatedAt.ToString("dd/MM/yyyy - HH:mm")</div>
+                                </div>
+                                <div class="transaction-amount @amountClass">
+                                    @amountPrefix@item.Amount.ToString("N0")₫
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <a href="#" class="btn btn-outline-custom w-100 mt-3">
+                        Xem tất cả
+                    </a>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card-custom mt-3">
+                    <h6 class="card-title mb-3">Thống kê tháng này</h6>
+                    <div class="stat-item">
+                        <div class="stat-label">
+                            <i class="bi bi-arrow-down-circle text-success"></i> Tổng nạp
+                        </div>
+                        <div class="stat-value text-success">@Model.TotalDepositThisMonth.ToString("N0")₫</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">
+                            <i class="bi bi-arrow-up-circle text-danger"></i> Tổng rút
+                        </div>
+                        <div class="stat-value text-danger">@Model.TotalWithdrawThisMonth.ToString("N0")₫</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ==================== WALLET SPECIFIC STYLES ==================== */
+    .wallet-header {
+        padding: 2rem 0;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+        .page-title i {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2rem;
+        }
+
+    .page-subtitle {
+        color: var(--text-light);
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* Balance Card */
+    .balance-card {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 1.5rem;
+        border-radius: 16px;
+        color: white;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+    }
+
+    .balance-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+
+    .balance-amount {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    /* Wallet Tabs */
+    .wallet-tabs {
+        border-bottom: 2px solid var(--border-color);
+        gap: 1rem;
+    }
+
+        .wallet-tabs .nav-link {
+            border: none;
+            background: none;
+            color: var(--text-light);
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 0;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+            .wallet-tabs .nav-link i {
+                font-size: 1.3rem;
+            }
+
+            .wallet-tabs .nav-link:hover {
+                color: var(--primary-color);
+                background: var(--bg-light);
+            }
+
+            .wallet-tabs .nav-link.active {
+                color: var(--primary-color);
+                background: none;
+                border-bottom-color: var(--primary-color);
+            }
+
+    /* Quick Amount Options */
+    .quick-amounts .amount-option {
+        background: var(--bg-light);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+        .quick-amounts .amount-option:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.15);
+        }
+
+        .quick-amounts .amount-option.selected {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+    .amount-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .amount-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: var(--accent-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    /* Custom Input Amount */
+    .input-amount {
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+        .input-amount .form-control {
+            border: none;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 1rem;
+        }
+
+            .input-amount .form-control:focus {
+                box-shadow: none;
+            }
+
+        .input-amount .input-group-text {
+            background: var(--bg-light);
+            border: none;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+    /* Payment Methods */
+    .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .payment-method {
+        position: relative;
+        cursor: pointer;
+    }
+
+        .payment-method input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .payment-method .method-content {
+            background: var(--bg-light);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+            .payment-method .method-content i {
+                font-size: 2rem;
+                display: block;
+                margin-bottom: 0.5rem;
+                color: var(--text-light);
+            }
+
+            .payment-method .method-content span {
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: var(--text-dark);
+                display: block;
+            }
+
+        .payment-method:hover .method-content {
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.15);
+        }
+
+        .payment-method.active .method-content,
+        .payment-method input:checked ~ .method-content {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+            .payment-method.active .method-content i,
+            .payment-method.active .method-content span,
+            .payment-method input:checked ~ .method-content i,
+            .payment-method input:checked ~ .method-content span {
+                color: white;
+            }
+
+    /* Fee Info */
+    .fee-info {
+        background: var(--bg-light);
+        border-radius: 12px;
+        padding: 1.25rem;
+    }
+
+    .fee-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+        .fee-row.total {
+            border-top: 2px solid var(--border-color);
+            padding-top: 0.75rem;
+            margin-top: 0.75rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+    /* Transaction List */
+    .transaction-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .transaction-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        background: var(--bg-light);
+        transition: all 0.3s ease;
+    }
+
+        .transaction-item:hover {
+            background: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transform: translateX(5px);
+        }
+
+    .transaction-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .transaction-item.deposit .transaction-icon {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+
+    .transaction-item.withdraw .transaction-icon,
+    .transaction-item.course .transaction-icon {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+    }
+
+    .transaction-info {
+        flex: 1;
+    }
+
+    .transaction-title {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+    }
+
+    .transaction-time {
+        font-size: 0.85rem;
+        color: var(--text-light);
+    }
+
+    .transaction-amount {
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+        .transaction-amount.positive {
+            color: var(--success-color);
+        }
+
+        .transaction-amount.negative {
+            color: var(--danger-color);
+        }
+
+    /* Stats */
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background: var(--bg-light);
+        border-radius: 8px;
+    }
+
+    .stat-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--text-light);
+    }
+
+    .stat-value {
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    /* Responsive */
+    @@media (max-width: 992px) {
+        .balance-card {
+            margin-top: 1rem;
+        }
+
+        .wallet-tabs .nav-link span {
+            display: none;
+        }
+
+        .payment-methods {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Quick amount selection
+        const amountOptions = document.querySelectorAll('.amount-option');
+        const depositInput = document.getElementById('depositAmount');
+        const withdrawInput = document.getElementById('withdrawAmount');
+
+        amountOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const amount = this.dataset.amount;
+
+                // Remove selected class from all
+                amountOptions.forEach(opt => opt.classList.remove('selected'));
+
+                // Add selected class to clicked
+                this.classList.add('selected');
+
+                // Update input value with formatted number
+                if (depositInput && document.querySelector('#deposit.show')) {
+                    depositInput.value = formatNumber(amount);
+                }
+            });
+        });
+
+        // Format number input
+        function formatNumber(num) {
+            return Number(num).toLocaleString('vi-VN');
+        }
+
+        // Handle input formatting
+        [depositInput, withdrawInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/[^\d]/g, '');
+                    if (value) {
+                        e.target.value = formatNumber(value);
+                    }
+                });
+            }
+        });
+
+        // Payment method selection
+        const paymentMethods = document.querySelectorAll('.payment-method');
+        paymentMethods.forEach(method => {
+            method.addEventListener('click', function() {
+                paymentMethods.forEach(m => m.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Update withdraw display
+        if (withdrawInput) {
+            withdrawInput.addEventListener('input', function() {
+                const amount = this.value.replace(/[^\d]/g, '');
+                const display = document.getElementById('withdrawAmountDisplay');
+                const total = document.getElementById('totalWithdraw');
+
+                if (display && total) {
+                    display.textContent = formatNumber(amount) + '₫';
+                    total.textContent = formatNumber(amount) + '₫';
+                }
+            });
+        }
+    });
+</script>

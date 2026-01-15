@@ -1,0 +1,605 @@
+﻿@model VietNOCMS.Models.AddContentViewModel
+@{
+    ViewData["Title"] = "Thêm nội dung - Giảng viên";
+}
+
+@section Styles {
+    <style>
+        .page-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem 0; margin-top: 70px; color: white; }
+        .section-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 1.5rem; border: 1px solid #e2e8f0; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; background: #f8fafc; padding: 10px; border-radius: 8px; }
+        .section-title-input { flex: 1; border: none; background: transparent; font-weight: 600; font-size: 1.1rem; padding: 0.5rem; }
+        .section-title-input:focus { outline: 2px solid #059669; border-radius: 4px; }
+        .video-type-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+        .video-type-card { border: 2px solid #e2e8f0; border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: 0.3s; }
+        .video-type-card:hover { border-color: #059669; }
+        .video-type-card.selected { border-color: #059669; background: rgba(5, 150, 105, 0.1); }
+        .video-type-card input { display: none; }
+        .lesson-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 0.5rem; }
+        .lesson-number { width: 30px; height: 30px; background: #059669; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .btn-icon { width: 36px; height: 36px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+        .btn-add-lesson { background: #059669; color: white; }
+        .btn-delete-section { background: #ef4444; color: white; }
+        .action-buttons { display: flex; justify-content: space-between; margin-top: 2rem; }
+        .add-section-btn { width: 100%; padding: 1rem; border: 2px dashed #e2e8f0; background: transparent; border-radius: 12px; color: #64748b; font-weight: 600; cursor: pointer; }
+        .add-section-btn:hover { border-color: #059669; color: #059669; background: rgba(5, 150, 105, 0.05); }
+    </style>
+}
+
+<div class="page-header">
+    <div class="container">
+        <h1 class="text-center mb-2"><i class="bi bi-collection-play"></i> Quản lý nội dung</h1>
+        <p class="text-center mb-0 opacity-75">Thêm chương và bài học cho khóa học: @Model.CourseName</p>
+    </div>
+</div>
+
+<div class="container py-4">
+    <form asp-action="AddContent" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" id="CourseId" value="@Model.CourseId" />
+
+        <div id="sectionsContainer">
+            @if (Model.Sections != null)
+            {
+                for (int i = 0; i < Model.Sections.Count; i++)
+                {
+                    <div class="section-card" data-section-index="@i">
+                        <div class="section-header">
+                            <i class="bi bi-grip-vertical text-muted"></i>
+                            <input type="text" class="section-title-input" 
+                                   value="@Model.Sections[i].SectionTitle" 
+                                   placeholder="Tên chương..." readonly /> <div class="d-flex gap-2">
+                                <button type="button" class="btn-icon btn-add-lesson" onclick="openAddLessonModal(@Model.Sections[i].ChapterId)">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                                <button type="button" class="btn-icon btn-delete-section" onclick="deleteSection(@Model.Sections[i].ChapterId)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    <div class="lessons-container">
+    @if (Model.Sections[i].Lessons != null)
+    {
+        for (int j = 0; j < Model.Sections[i].Lessons.Count; j++)
+        {
+            var lesson = Model.Sections[i].Lessons[j];
+            
+            // 1. KIỂM TRA LOẠI BÀI HỌC
+            bool isAssignment = lesson.LessonType == "Assignment";
+            bool isMeeting = lesson.LessonType == "Meeting";
+
+            <div class="lesson-item">
+                <div class="lesson-number" style="background-color: @(isAssignment ? "#8b5cf6" : (isMeeting ? "#ef4444" : "#059669"));">
+                    @(j + 1)
+                </div>
+                
+                <div class="flex-grow-1">
+                    <div class="fw-bold">
+                        @lesson.LessonTitle
+                        
+                        @if (isAssignment)
+                        {
+                            <span class="badge bg-warning text-dark ms-2" style="font-size: 0.7em;">
+                                <i class="bi bi-pencil-square"></i> BÀI TẬP
+                            </span>
+                        }
+                        else if (isMeeting)
+                        {
+                            <span class="badge bg-danger ms-2" style="font-size: 0.7em;">LIVE</span>
+                        }
+                    </div>
+                    
+                    <div class="small text-muted">
+                        @if (isAssignment)
+                        {
+                            <span class="text-primary"><i class="bi bi-clock-history"></i> Hạn nộp: @(lesson.DueDate?.ToString("dd/MM/yyyy") ?? "Không giới hạn")</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-play-circle"></i> <span>@lesson.VideoDuration phút</span>
+                        }
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2">
+          <button type="button" class="btn-icon" style="background: #3b82f6; color: white;"
+    onclick="editLesson(
+        @lesson.LessonId, 
+        '@System.Web.HttpUtility.JavaScriptStringEncode(lesson.LessonTitle)',  
+        @lesson.VideoDuration,                                                
+        '@lesson.IsFree', 
+        '@lesson.LessonType', 
+        '@System.Web.HttpUtility.JavaScriptStringEncode(lesson.VideoUrl)', 
+        '@System.Web.HttpUtility.JavaScriptStringEncode(lesson.MeetingLink)', 
+        '@(lesson.StartTime?.ToString("yyyy-MM-ddTHH:mm") ?? "")', 
+        '@System.Web.HttpUtility.JavaScriptStringEncode(lesson.Content)' 
+    )">
+    <i class="bi bi-pencil"></i>
+</button>
+                    <button type="button" class="btn-icon btn-delete-section" onclick="deleteLesson(@lesson.LessonId)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        }
+    }
+</div>
+                    </div>
+                }
+            }
+        </div>
+
+        <button type="button" class="add-section-btn" onclick="addSection()">
+            <i class="bi bi-plus-circle"></i> Thêm chương mới
+        </button>
+
+        <div class="action-buttons">
+            <a href="@Url.Action("CreateCourse", "Instructor", new { id = Model.CourseId })" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Quay lại
+            </a>
+            <div class="d-flex gap-2">
+                <a href="@Url.Action("MyCourses", "Instructor")" class="btn btn-secondary">Lưu nháp</a>
+                <a href="@Url.Action("PublishCourse", "Instructor", new { id = Model.CourseId })" class="btn btn-primary">Tiếp theo <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="addLessonModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thông tin bài học</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label">Tên bài học <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="lessonTitle">
+                </div>
+            
+<div class="form-group">
+    <label class="form-label">Nội dung chi tiết / Tóm tắt</label>
+    <textarea class="form-control" id="lessonContent" rows="5" 
+              placeholder="Tóm tắt nội dung chính, các điểm cần lưu ý hoặc ghi chú cho bài học này..."></textarea>
+    
+</div>
+<div class="form-group">
+    <label class="form-label">Mô tả ngắn (Meta description)</label>
+    <textarea class="form-control" id="lessonShortDesc" rows="2" placeholder="Mô tả ngắn gọn hiển thị ở danh sách..."></textarea>
+</div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Loại nội dung</label>
+                    <div class="video-type-options">
+                        <label class="video-type-card selected" onclick="selectType('upload')">
+                            <input type="radio" name="videoType" value="upload" checked>
+                            <i class="bi bi-cloud-upload fs-2"></i><div>Video Upload</div>
+                        </label>
+                        <label class="video-type-card" onclick="selectType('youtube')">
+                            <input type="radio" name="videoType" value="youtube">
+                            <i class="bi bi-youtube fs-2"></i><div>YouTube</div>
+                        </label>
+                        <label class="video-type-card" onclick="selectType('meeting')">
+                            <input type="radio" name="videoType" value="meeting">
+                            <i class="bi bi-camera-video fs-2 text-primary"></i><div class="text-primary fw-bold">Google Meet</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="group-upload" class="mb-3">
+                    <label class="form-label">File Video</label>
+                    <input type="file" class="form-control" id="videoFile" accept="video/*">
+                </div>
+
+                <div id="group-youtube" class="mb-3" style="display:none;">
+                    <label class="form-label">Link YouTube</label>
+                    <input type="text" class="form-control" id="youtubeUrl" placeholder="https://youtube.com/...">
+                </div>
+
+             <div id="group-meeting" class="mb-3 p-3 border rounded bg-light border-primary bg-opacity-10" style="display:none;">
+    <label class="form-label fw-bold text-primary"><i class="bi bi-link-45deg"></i> Link phòng họp</label>
+    <input type="url" class="form-control border-primary mb-2" id="meetingLink" placeholder="https://meet.google.com/..." />
+    
+    <div class="row">
+        <div class="col-6">
+            <label class="form-label fw-bold text-primary"><i class="bi bi-calendar-event"></i> Thời gian bắt đầu</label>
+            <input type="datetime-local" class="form-control border-primary" id="lessonStartTime" onchange="calculateDuration()" />
+        </div>
+        <div class="col-6">
+            <label class="form-label fw-bold text-primary"><i class="bi bi-clock-history"></i> Thời gian kết thúc</label>
+            <input type="datetime-local" class="form-control border-primary" id="lessonEndTime" onchange="calculateDuration()" />
+        </div>
+    </div>
+    <small class="text-muted" id="durationText">Thời lượng: 0 phút</small>
+</div>
+                <div class="form-group mb-3 p-3 bg-light rounded border">
+                    <label class="form-label fw-bold"><i class="bi bi-paperclip"></i> Tài liệu đính kèm</label>
+                    <input type="file" class="form-control" id="lessonDocument">
+                </div>
+
+                <div class="row">
+                    <div class="col-6">
+                        <label class="form-label">Thời lượng (phút)</label>
+                        <input type="number" class="form-control" id="videoDuration" value="10">
+                    </div>
+                    <div class="col-6 pt-4">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="isFreePreview">
+                            <label class="form-check-label">Cho phép xem thử</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="saveLesson()">Lưu lại</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        let currentChapterId = 0;
+        let isEditing = false;
+        let editingLessonId = 0;
+
+        // --- UI LOGIC ---
+        function selectType(type) {
+            document.querySelectorAll('.video-type-card').forEach(c => c.classList.remove('selected'));
+            const radio = document.querySelector(`input[name="videoType"][value="${type}"]`);
+            if(radio) {
+                radio.checked = true;
+                radio.parentElement.classList.add('selected');
+            }
+            
+            document.getElementById('group-upload').style.display = 'none';
+            document.getElementById('group-youtube').style.display = 'none';
+            document.getElementById('group-meeting').style.display = 'none';
+
+            if(type === 'upload') document.getElementById('group-upload').style.display = 'block';
+            else if(type === 'youtube') document.getElementById('group-youtube').style.display = 'block';
+            else if(type === 'meeting') document.getElementById('group-meeting').style.display = 'block';
+        }
+
+        // --- MỞ MODAL THÊM ---
+        function openAddLessonModal(chapterId) {
+            currentChapterId = chapterId;
+            isEditing = false;
+            
+            // Reset
+            document.querySelector('.modal-title').innerText = 'Thêm bài học mới';
+            document.getElementById('lessonTitle').value = '';
+            document.getElementById('videoDuration').value = '10';
+            document.getElementById('videoFile').value = '';
+            document.getElementById('youtubeUrl').value = '';
+            document.getElementById('meetingLink').value = '';
+            document.getElementById('lessonStartTime').value = '';
+            document.getElementById('lessonDocument').value = '';
+            
+            // MẶC ĐỊNH LUÔN LÀ UPLOAD (VIDEO)
+            selectType('upload');
+            new bootstrap.Modal(document.getElementById('addLessonModal')).show();
+        }
+
+        // --- MỞ MODAL SỬA ---
+       function editLesson(id, title, duration, isFree, type, startTime, urlOrLink,content) {
+    isEditing = true;
+    editingLessonId = id;
+
+    document.querySelector('.modal-title').innerText = 'Cập nhật bài học';
+    document.getElementById('lessonTitle').value = title;
+    document.getElementById('lessonContent').value = content
+    document.getElementById('videoDuration').value = duration;
+    document.getElementById('isFreePreview').checked = (isFree === 'True' || isFree === true);
+
+    // Reset loại
+    let targetType = 'upload';
+    
+    if (type === 'Meeting' || type === 'meeting') { // Check cả chữ hoa thường cho chắc
+        targetType = 'meeting';
+        document.getElementById('meetingLink').value = urlOrLink;
+        
+        if(startTime) {
+            // 1. Điền giờ bắt đầu
+            document.getElementById('lessonStartTime').value = startTime;
+            
+            // 2. TÍNH TOÁN GIỜ KẾT THÚC TỪ DURATION
+            // startTime có dạng "yyyy-MM-ddTHH:mm"
+            let startDate = new Date(startTime);
+            // Cộng thêm số phút duration
+            let endDate = new Date(startDate.getTime() + duration * 60000);
+            
+            // Format lại thành chuỗi yyyy-MM-ddTHH:mm để gán vào input datetime-local
+            // Lưu ý: Date.toISOString() trả về giờ UTC, cần chỉnh lại theo múi giờ local nếu cần thiết
+            // Cách đơn giản để format local string:
+            startDate.setMinutes(startDate.getMinutes() - startDate.getTimezoneOffset());
+            endDate.setMinutes(endDate.getMinutes() - endDate.getTimezoneOffset());
+            
+            document.getElementById('lessonEndTime').value = endDate.toISOString().slice(0,16);
+            
+            // Cập nhật text hiển thị
+            document.getElementById('durationText').innerText = `Thời lượng: ${duration} phút`;
+        }
+    } 
+    else if (type === 'Video') {
+        if (urlOrLink && (urlOrLink.includes('youtube') || urlOrLink.includes('youtu.be'))) {
+            targetType = 'youtube';
+            document.getElementById('youtubeUrl').value = urlOrLink;
+        } else {
+            targetType = 'upload';
+        }
+    }
+    
+    selectType(targetType);
+    
+    document.getElementById('videoFile').value = '';
+    document.getElementById('lessonDocument').value = '';
+    
+    new bootstrap.Modal(document.getElementById('addLessonModal')).show();
+}
+        // Thêm hàm này vào trong thẻ <script>
+function calculateDuration() {
+    const startStr = document.getElementById('lessonStartTime').value;
+    const endStr = document.getElementById('lessonEndTime').value;
+    const durationInput = document.getElementById('videoDuration'); // Ô input thời lượng gốc
+
+    if (startStr && endStr) {
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+        
+        // Tính chênh lệch ra mili giây rồi chia cho 60000 để ra phút
+        const diffMs = end - start;
+        const diffMins = Math.round(diffMs / 60000);
+
+        if (diffMins > 0) {
+            durationInput.value = diffMins; // Cập nhật vào ô thời lượng để gửi đi
+            document.getElementById('durationText').innerText = `Thời lượng: ${diffMins} phút`;
+            document.getElementById('durationText').classList.remove('text-danger');
+        } else {
+            document.getElementById('durationText').innerText = "Giờ kết thúc phải sau giờ bắt đầu!";
+            document.getElementById('durationText').classList.add('text-danger');
+        }
+    }
+}
+
+    // --- LƯU DATA ---
+   function saveLesson() {
+    const title = document.getElementById('lessonTitle').value;
+    if(!title) { Swal.fire('Lỗi', 'Nhập tên bài học', 'warning'); return; }
+
+    const videoType = document.querySelector('input[name="videoType"]:checked').value;
+    
+    // --- MAP LOẠI BÀI HỌC VỀ CHUẨN ---
+    let finalLessonType = "Video"; // Mặc định là Video
+    if (videoType === 'meeting') {
+        finalLessonType = "Meeting";
+    }
+    // ----------------------------------
+
+    if (videoType === 'meeting') {
+        const startStr = document.getElementById('lessonStartTime').value;
+        const endStr = document.getElementById('lessonEndTime').value;
+        
+        if (!startStr || !endStr) {
+            Swal.fire('Lỗi', 'Vui lòng chọn Giờ bắt đầu và Giờ kết thúc!', 'warning');
+            return;
+        }
+        
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+        const diffMins = Math.round((end - start) / 60000);
+        
+        if (diffMins <= 0) {
+            Swal.fire('Lỗi', 'Giờ kết thúc phải lớn hơn Giờ bắt đầu!', 'error');
+            return;
+        }
+        document.getElementById('videoDuration').value = diffMins;
+    }
+
+    const formData = new FormData();
+    formData.append('title', title);
+    const content = document.getElementById('lessonContent').value;
+    formData.append('Content', content);
+    formData.append('duration', document.getElementById('videoDuration').value);
+    formData.append('isFree', document.getElementById('isFreePreview').checked);
+    
+    formData.append('videoType', videoType);
+    
+    // --- GỬI LOẠI BÀI HỌC CHUẨN ---
+    formData.append('lessonType', finalLessonType); 
+    // ------------------------------
+
+    if (videoType === 'upload') {
+        const f = document.getElementById('videoFile').files[0];
+        if(f) formData.append('videoFile', f);
+    } else if (videoType === 'youtube') {
+        formData.append('youtubeUrl', document.getElementById('youtubeUrl').value);
+    } else if (videoType === 'meeting') {
+        const link = document.getElementById('meetingLink').value;
+        const time = document.getElementById('lessonStartTime').value;
+        
+        if(!link) { Swal.fire('Lỗi', 'Nhập link phòng họp!', 'warning'); return; }
+        
+        formData.append('meetingLink', link);
+        formData.append('startTime', time);
+    }
+
+    const doc = document.getElementById('lessonDocument').files[0];
+    if(doc) formData.append('documentFile', doc);
+
+    let url = isEditing ? '/Instructor/UpdateLesson' : '/Instructor/CreateLesson';
+    if(isEditing) formData.append('lessonId', editingLessonId);
+    else formData.append('chapterId', currentChapterId);
+
+    Swal.fire({ title: 'Đang xử lý...', didOpen: () => Swal.showLoading() });
+
+    $.ajax({
+        url: url, type: 'POST',
+        headers: { "RequestVerificationToken": csrfToken },
+        data: formData, processData: false, contentType: false,
+        success: function(res) {
+            if(res.success) {
+                Swal.fire('Thành công', 'Đã lưu!', 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Lỗi', res.message, 'error');
+            }
+        },
+        error: () => Swal.fire('Lỗi', 'Lỗi kết nối', 'error')
+    });
+}
+        
+        // --- CÁC HÀM PHỤ ---
+        function addSection() {
+            Swal.fire({ title: 'Tên chương', input: 'text', showCancelButton: true }).then((r) => {
+                if(r.isConfirmed && r.value) {
+                    const cid = document.getElementById('CourseId').value;
+                    fetch('/Instructor/CreateChapter', {
+                        method: 'POST', headers: {'Content-Type':'application/json', 'RequestVerificationToken': csrfToken},
+                        body: JSON.stringify({ SectionTitle: r.value, CourseId: parseInt(cid) })
+                    }).then(res=>res.json()).then(d=>{ if(d.success) location.reload(); });
+                }
+            });
+        }
+
+      // Thay thế function deleteSection cũ bằng đoạn này:
+
+function deleteSection(id) {
+    Swal.fire({
+        title: 'Bạn chắc chắn chứ?',
+        text: "Xóa chương này sẽ xóa tất cả BÀI HỌC bên trong nó! Hành động này không thể hoàn tác.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Vâng, xóa nó!',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            
+            // Hiện loading
+            Swal.fire({
+                title: 'Đang xóa...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            // Lấy token bảo mật
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            // Gọi API Xóa
+            $.ajax({
+                url: '/Instructor/DeleteChapter/' + id,
+                type: 'POST',
+                headers: { "RequestVerificationToken": token },
+                success: function (res) {
+                    if (res.success) {
+                        Swal.fire(
+                            'Đã xóa!',
+                            'Chương học đã được xóa thành công.',
+                            'success'
+                        ).then(() => {
+                            // Reload lại trang để cập nhật giao diện
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Lỗi', res.message, 'error');
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire('Lỗi hệ thống', 'Không thể kết nối đến server. Mã lỗi: ' + xhr.status, 'error');
+                }
+            });
+        }
+    });
+}
+        // ==========================================
+    // HÀM CHỈNH SỬA BÀI HỌC (Đổ dữ liệu vào Modal)
+    // ==========================================
+ function editLesson(id, title, duration, isFree, type, videoUrl, meetingLink, startTime, content) {
+        // 1. Cập nhật trạng thái để biết là đang Sửa
+        isEditing = true;
+        editingLessonId = id;
+
+        // 2. Đổi tiêu đề Modal
+        document.querySelector('.modal-title').innerText = 'Cập nhật bài học';
+
+        // 3. Đổ dữ liệu TEXT vào các ô input
+        document.getElementById('lessonTitle').value = title;
+        document.getElementById('lessonContent').value = content || ''; // Nội dung chi tiết
+        document.getElementById('videoDuration').value = duration;
+        
+        // 4. Xử lý Checkbox Miễn phí
+        // C# trả về chuỗi "True"/"False", cần so sánh để ra boolean
+        document.getElementById('isFreePreview').checked = (isFree === 'True' || isFree === true);
+
+        // 5. Xử lý Loại bài học & Dữ liệu riêng
+        let targetType = 'upload'; // Mặc định
+        const safeType = (type || '').toLowerCase();
+        const safeUrl = videoUrl || '';
+
+        // Reset các trường dữ liệu trước
+        document.getElementById('youtubeUrl').value = '';
+        document.getElementById('meetingLink').value = '';
+        document.getElementById('lessonStartTime').value = '';
+        document.getElementById('lessonEndTime').value = '';
+
+        if (safeType === 'meeting' || safeType === 'stream') {
+            // --- TRƯỜNG HỢP: MEETING ---
+            targetType = 'meeting';
+            document.getElementById('meetingLink').value = meetingLink || '';
+            
+            if (startTime) {
+                document.getElementById('lessonStartTime').value = startTime;
+                
+                // Tự tính giờ kết thúc hiển thị lại cho đẹp (dựa vào duration)
+                let startObj = new Date(startTime);
+                let endObj = new Date(startObj.getTime() + duration * 60000);
+                
+                // Hàm format ngày giờ local
+                const toLocalISO = (date) => {
+                    const offset = date.getTimezoneOffset() * 60000;
+                    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+                };
+                document.getElementById('lessonEndTime').value = toLocalISO(endObj);
+                document.getElementById('durationText').innerText = `Thời lượng: ${duration} phút`;
+            }
+        } 
+        else {
+            // --- TRƯỜNG HỢP: VIDEO ---
+            if (safeUrl.includes('youtube') || safeUrl.includes('youtu.be')) {
+                targetType = 'youtube';
+                document.getElementById('youtubeUrl').value = safeUrl;
+            } else {
+                targetType = 'upload';
+                // Lưu ý: Input File không thể gán giá trị bằng code vì lý do bảo mật
+                // Ta chỉ có thể reset nó
+            }
+        }
+
+        // 6. Kích hoạt giao diện (Hiện đúng ô nhập theo loại)
+        selectType(targetType);
+
+        // 7. Reset ô file upload (tránh gửi nhầm file cũ nếu user không chọn lại)
+        document.getElementById('videoFile').value = '';
+        document.getElementById('lessonDocument').value = '';
+
+        // 8. Mở Modal
+        new bootstrap.Modal(document.getElementById('addLessonModal')).show();
+    }
+
+        function deleteLesson(id) {
+            Swal.fire({ title: 'Xóa bài?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((r) => {
+                if(r.isConfirmed) {
+                    $.post('/Instructor/DeleteLesson/'+id, { __RequestVerificationToken: csrfToken }, function(res){
+                        if(res.success) location.reload();
+                    });
+                }
+            });
+        }
+    </script>
+}

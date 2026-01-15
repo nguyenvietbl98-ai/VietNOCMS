@@ -1,0 +1,294 @@
+﻿@model IEnumerable<VietNOCMS.Models.Enrollment>
+
+<style>
+    .enrollment-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .enrollment-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        overflow: hidden;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .header-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 20px 20px 0 0;
+    }
+
+        .header-section h3 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+            .header-section h3 i {
+                font-size: 2rem;
+                background: rgba(255,255,255,0.2);
+                padding: 0.5rem;
+                border-radius: 12px;
+            }
+
+    .stats-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        display: inline-block;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .table-responsive {
+        padding: 1.5rem;
+    }
+
+    .custom-table {
+        margin: 0;
+    }
+
+        .custom-table thead th {
+            background: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            border: none;
+            padding: 1rem;
+        }
+
+        .custom-table tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+
+            .custom-table tbody tr:hover {
+                background: #f8f9ff;
+                transform: scale(1.01);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+            }
+
+        .custom-table tbody td {
+            padding: 1.25rem 1rem;
+            vertical-align: middle;
+            border: none;
+        }
+
+    .student-name {
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .student-name::before {
+            content: "👤";
+            font-size: 1.25rem;
+        }
+
+    .course-name {
+        color: #667eea;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .course-name::before {
+            content: "📚";
+        }
+
+    .date-badge {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+        .date-badge::before {
+            content: "📅";
+        }
+
+    .amount-badge {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        display: inline-block;
+        box-shadow: 0 4px 12px rgba(56, 239, 125, 0.3);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-start;
+    }
+
+    .btn-approve {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(56, 239, 125, 0.3);
+    }
+
+        .btn-approve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 239, 125, 0.4);
+            background: linear-gradient(135deg, #0d8071 0%, #2dd165 100%);
+        }
+
+    .btn-reject {
+        background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(235, 51, 73, 0.3);
+    }
+
+        .btn-reject:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(235, 51, 73, 0.4);
+            background: linear-gradient(135deg, #c72938 0%, #d14936 100%);
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #a0aec0;
+    }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-approve, .btn-reject {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="enrollment-container">
+    <div class="container">
+        <div class="enrollment-card">
+            <div class="header-section">
+                <h3>
+                    <i class="bi bi-people"></i>
+                    Duyệt học viên tham gia
+                </h3>
+                <div class="stats-badge">
+                    <i class="bi bi-hourglass-split"></i> Đang chờ duyệt: @Model.Count() học viên
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                @if (Model.Any())
+                {
+                    <table class="table custom-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Học viên</th>
+                                <th>Khóa học</th>
+                                <th>Ngày đăng ký</th>
+                                <th>Số tiền</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="student-name">@item.Student.FullName</span>
+                                    </td>
+                                    <td>
+                                        <span class="course-name">@item.Course.CourseName</span>
+                                    </td>
+                                    <td>
+                                        <span class="date-badge">@item.EnrollmentAt.ToString("dd/MM/yyyy")</span>
+                                    </td>
+                                    <td>
+                                        <span class="amount-badge">@item.PaidAmount.ToString("N0")₫</span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button onclick="process(@item.EnrollmentId, 'Approve')" class="btn btn-approve btn-sm">
+                                                <i class="bi bi-check-circle"></i> Đồng ý
+                                            </button>
+                                            <button onclick="process(@item.EnrollmentId, 'Reject')" class="btn btn-reject btn-sm">
+                                                <i class="bi bi-x-circle"></i> Từ chối
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h5>Không có học viên nào cần duyệt</h5>
+                        <p>Tất cả yêu cầu đăng ký đã được xử lý</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function process(id, act) {
+        let msg = act === 'Approve' ? "Duyệt học viên này?" : "Nhập lý do từ chối:";
+        let reason = act === 'Reject' ? prompt(msg) : "";
+        if (act === 'Reject' && !reason) return;
+        $.post('/Instructor/ApproveOrReject', { enrollmentId: id, action: act, reason: reason }, function(res) {
+            if(res.success) location.reload();
+            else alert("Lỗi xử lý!");
+        });
+    }
+</script>

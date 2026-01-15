@@ -1,0 +1,849 @@
+﻿@model VietNOCMS.Models.ScheduleViewModel
+
+@{
+    ViewData["Title"] = "Lịch Học Của Tôi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .schedule-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .schedule-header {
+            margin-bottom: 2rem;
+        }
+
+            .schedule-header h1 {
+                font-size: 1.75rem;
+                font-weight: 700;
+                color: var(--text-dark);
+                margin-bottom: 0.5rem;
+            }
+
+        .schedule-subtitle {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .schedule-tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .schedule-tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+            .schedule-tab:hover {
+                color: var(--primary-color);
+            }
+
+            .schedule-tab.active {
+                color: var(--primary-color);
+            }
+
+                .schedule-tab.active::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -2px;
+                    left: 0;
+                    right: 0;
+                    height: 2px;
+                    background: var(--primary-color);
+                }
+
+            .schedule-tab .badge {
+                background: var(--danger-color);
+                color: white;
+                font-size: 0.7rem;
+                padding: 0.2rem 0.5rem;
+                border-radius: 10px;
+                font-weight: 700;
+            }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding: 0.75rem 0;
+        }
+
+            .section-header i {
+                font-size: 1.25rem;
+            }
+
+            .section-header.upcoming {
+                color: #f97316;
+            }
+
+            .section-header.completed {
+                color: var(--success-color);
+            }
+
+            .section-header.pending {
+                color: #f59e0b;
+            }
+
+            .section-header h2 {
+                font-size: 1rem;
+                font-weight: 600;
+                margin: 0;
+            }
+
+        .lesson-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+            .lesson-card:hover {
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .lesson-card.upcoming {
+                border-left-color: #f97316;
+                background: linear-gradient(to right, rgba(249, 115, 22, 0.02), white);
+            }
+
+            .lesson-card.live {
+                border-left-color: var(--danger-color);
+                background: linear-gradient(to right, rgba(239, 68, 68, 0.05), white);
+            }
+
+            .lesson-card.completed {
+                border-left-color: var(--success-color);
+            }
+
+        .assignment-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+            .assignment-card:hover {
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .assignment-card.pending {
+                border-left-color: #f59e0b;
+                background: linear-gradient(to right, rgba(245, 158, 11, 0.02), white);
+            }
+
+            .assignment-card.completed {
+                border-left-color: var(--success-color);
+            }
+
+        .content-col {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+
+            .icon-box i {
+                font-size: 1.25rem;
+                color: var(--primary-color);
+            }
+
+        .lesson-card.upcoming .icon-box {
+            background: rgba(249, 115, 22, 0.1);
+        }
+
+            .lesson-card.upcoming .icon-box i {
+                color: #f97316;
+            }
+
+        .lesson-card.completed .icon-box {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+            .lesson-card.completed .icon-box i {
+                color: var(--success-color);
+            }
+
+        .assignment-card.pending .icon-box {
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+            .assignment-card.pending .icon-box i {
+                color: #f59e0b;
+            }
+
+        .course-name {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .item-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.75rem;
+        }
+
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--danger-color);
+            color: white;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+            margin-top: 0.75rem;
+        }
+
+            .live-badge::before {
+                content: '';
+                width: 8px;
+                height: 8px;
+                background: white;
+                border-radius: 50%;
+                animation: blink 1s infinite;
+            }
+
+        @@keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+            }
+        }
+
+        @@keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .action-col {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-action {
+            padding: 0.65rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .btn-join {
+            background: var(--danger-color);
+            color: white;
+        }
+
+            .btn-join:hover {
+                background: #dc2626;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            }
+
+        .btn-details {
+            background: var(--primary-color);
+            color: white;
+        }
+
+            .btn-details:hover {
+                background: #1d4ed8;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            }
+
+        .btn-submit {
+            background: #f59e0b;
+            color: white;
+        }
+
+            .btn-submit:hover {
+                background: #d97706;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            }
+
+        .btn-view {
+            background: white;
+            color: var(--text-light);
+            border: 2px solid var(--border-color);
+        }
+
+            .btn-view:hover {
+                border-color: var(--primary-color);
+                color: var(--primary-color);
+            }
+
+        .tab-content-section {
+            display: none;
+        }
+
+            .tab-content-section.active {
+                display: block;
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+            .empty-state i {
+                font-size: 4rem;
+                color: var(--border-color);
+                margin-bottom: 1rem;
+            }
+
+            .empty-state h3 {
+                font-size: 1.25rem;
+                color: var(--text-light);
+                margin-bottom: 0.5rem;
+            }
+
+        .badge-overdue {
+            background: #fee2e2;
+            color: #ef4444;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.75rem;
+        }
+
+        .deadline-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.75rem;
+        }
+
+        @@media (max-width: 768px) {
+            .lesson-card, .assignment-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .action-col {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-action {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+}
+
+<div class="schedule-container">
+    <div class="schedule-header">
+        <h1>Lịch Học Của Tôi</h1>
+        <p class="schedule-subtitle">Theo dõi lịch học trực tuyến và hạn nộp bài tập</p>
+    </div>
+
+    <div class="schedule-tabs">
+        <button class="schedule-tab active" data-tab="lessons">
+            <i class="bi bi-play-circle"></i>
+            Lịch học trực tuyến
+        </button>
+        <button class="schedule-tab" data-tab="assignments">
+            <i class="bi bi-file-text"></i>
+            Hạn nộp bài tập
+            @if (Model.PendingAssignments != null && Model.PendingAssignments.Count > 0)
+            {
+                <span class="badge">@Model.PendingAssignments.Count</span>
+            }
+        </button>
+    </div>
+
+    <div class="tab-content-section active" id="lessons-tab">
+        <div class="section-header upcoming">
+            <i class="bi bi-clock-history"></i>
+            <h2>Sắp diễn ra</h2>
+        </div>
+
+        @if (Model.UpcomingLessons != null && Model.UpcomingLessons.Any())
+        {
+            foreach (var item in Model.UpcomingLessons)
+            {
+                <div class="lesson-card upcoming @(item.IsLive ? "live" : "")">
+                    <div class="content-col">
+                        <div class="icon-box">
+                            <i class="bi bi-camera-video"></i>
+                        </div>
+                        <div class="course-name">@item.CourseName</div>
+                        <div class="item-title">@item.LessonName</div>
+                        <div class="meta-info">
+                            <div class="meta-item">
+                                <i class="bi bi-calendar3"></i>
+                                <span>@item.StartTime.ToString("dddd, HH:mm dd/MM/yyyy")</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="bi bi-clock"></i>
+                                <span>@item.StartTime.ToString("HH:mm") - @item.EndTime.ToString("HH:mm")</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="bi bi-person"></i>
+                                <span>@item.InstructorName</span>
+                            </div>
+                        </div>
+
+                        @if (item.IsLive)
+                        {
+                            <div class="live-badge">Đang diễn ra</div>
+                        }
+                        else if (item.TimeUntilStart.TotalHours < 24 && item.TimeUntilStart.TotalHours > 0)
+                        {
+                            <div class="text-warning fw-bold mt-2" style="font-size: 0.85rem;">
+                                <i class="bi bi-hourglass-split"></i> Bắt đầu sau @((int)item.TimeUntilStart.TotalHours)h @item.TimeUntilStart.Minutes p
+                            </div>
+                        }
+                    </div>
+
+                    <div class="action-col">
+                        @if (item.IsLive)
+                        {
+                            <a href="@item.MeetingLink" target="_blank" class="btn-action btn-join text-decoration-none">
+                                <i class="bi bi-camera-video"></i> Vào học ngay
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Learn", "Courses", new { id = item.CourseId, lessonId = item.LessonId })" class="btn-action btn-details text-decoration-none">
+                                <i class="bi bi-info-circle"></i> Xem chi tiết
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="bi bi-calendar-check"></i>
+                <h3>Không có lịch học sắp tới</h3>
+            </div>
+        }
+
+        @if (Model.CompletedLessons != null && Model.CompletedLessons.Any())
+        {
+            <div class="section-header completed mt-4">
+                <i class="bi bi-check-circle"></i>
+                <h2>Đã kết thúc</h2>
+            </div>
+            foreach (var item in Model.CompletedLessons)
+            {
+                <div class="lesson-card completed">
+                    <div class="content-col">
+                        <div class="icon-box">
+                            <i class="bi bi-camera-video-off"></i>
+                        </div>
+                        <div class="course-name">@item.CourseName</div>
+                        <div class="item-title">@item.LessonName</div>
+                        <div class="meta-info">
+                            <div class="meta-item">
+                                <i class="bi bi-calendar3"></i>
+                                <span>@item.StartTime.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-col">
+                        <a href="@Url.Action("Learn", "Courses", new { id = item.CourseId, lessonId = item.LessonId })" class="btn-action btn-view text-decoration-none">
+                            <i class="bi bi-eye"></i> Xem lại
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="tab-content-section" id="assignments-tab">
+        <div class="section-header pending">
+            <i class="bi bi-exclamation-circle"></i>
+            <h2>Cần nộp</h2>
+        </div>
+
+        @if (Model.PendingAssignments != null && Model.PendingAssignments.Any())
+        {
+            foreach (var assign in Model.PendingAssignments)
+            {
+                <div class="assignment-card pending">
+                    <div class="content-col">
+                        <div class="icon-box">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        <div class="course-name">@assign.CourseName</div>
+                        <div class="item-title">@assign.LessonName</div>
+
+                        <div class="meta-info">
+                            <div class="meta-item">
+                                <i class="bi bi-calendar-x"></i>
+                                <span>Hạn chót: @(assign.DueDate?.ToString("HH:mm dd/MM/yyyy") ?? "Không thời hạn")</span>
+                            </div>
+                        </div>
+
+                        @if (assign.IsOverdue)
+                        {
+                            <div class="badge-overdue">
+                                <i class="bi bi-exclamation-triangle-fill"></i> @assign.TimeRemaining
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="deadline-badge">
+                                <i class="bi bi-clock-history"></i> @assign.TimeRemaining
+                            </div>
+                        }
+
+                        <div id="content-@assign.LessonId" style="display:none;">
+                            @Html.Raw(assign.Content ?? "<p class='text-muted'>Không có mô tả chi tiết.</p>")
+                        </div>
+                    </div>
+
+                    <div class="action-col">
+                        <button type="button" class="btn-action btn-view"
+                                onclick="showAssignmentContent(@assign.LessonId, '@System.Web.HttpUtility.JavaScriptStringEncode(assign.LessonName)')">
+                            <i class="bi bi-eye"></i> Xem đề
+                        </button>
+
+                        <button class="btn-action btn-submit"
+                                onclick="openSubmitModal(@assign.LessonId, '@System.Web.HttpUtility.JavaScriptStringEncode(assign.LessonName)')">
+                            <i class="bi bi-upload"></i> Nộp bài
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="bi bi-clipboard-check"></i>
+                <h3>Tuyệt vời!</h3>
+                <p>Bạn không có bài tập nào cần nộp.</p>
+            </div>
+        }
+
+        @if (Model.CompletedAssignments != null && Model.CompletedAssignments.Any())
+        {
+            <div class="section-header completed mt-4">
+                <i class="bi bi-check-circle"></i>
+                <h2>Đã nộp</h2>
+            </div>
+            foreach (var assign in Model.CompletedAssignments)
+            {
+                <div class="assignment-card completed">
+                    <div class="content-col">
+                        <div class="icon-box"><i class="bi bi-file-earmark-check"></i></div>
+                        <div class="course-name">@assign.CourseName</div>
+                        <div class="item-title">@assign.LessonName</div>
+                        <div class="meta-info">
+                            <div class="meta-item" style="color: var(--success-color); font-weight: 600;">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Đã nộp: @assign.SubmittedAt?.ToString("dd/MM/yyyy")</span>
+                            </div>
+                        </div>
+
+                        <div id="content-@assign.LessonId" style="display:none;">
+                            @Html.Raw(assign.Content)
+                        </div>
+                    </div>
+                    <div class="action-col">
+                        <button type="button" class="btn-action btn-view"
+                                onclick="showAssignmentContent(@assign.LessonId, '@System.Web.HttpUtility.JavaScriptStringEncode(assign.LessonName)')">
+                            <i class="bi bi-eye"></i> Xem đề
+                        </button>
+                        <button class="btn-action btn-view"
+                                onclick="openViewSubmission(
+                    '@assign.SubmittedAt?.ToString("dd/MM/yyyy HH:mm")',
+                    '@System.Web.HttpUtility.JavaScriptStringEncode(assign.LessonName)',
+                    '@System.Web.HttpUtility.JavaScriptStringEncode(assign.SubmissionContent ?? "")', 
+                    '@System.Web.HttpUtility.JavaScriptStringEncode(assign.SubmissionUrl ?? "")'      
+                )">
+                            <i class="bi bi-eye"></i> Xem bài làm
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="assignmentContentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold text-primary" id="modalAssignTitle">
+                    <i class="bi bi-file-text me-2"></i> Chi tiết bài tập
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" style="font-size: 1rem; line-height: 1.6; color: #334155;">
+                <div id="modalAssignBody"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                <a href="#" id="modalGoToLearnBtn" class="btn btn-primary rounded-pill px-4 text-decoration-none">
+                    <i class="bi bi-pencil-square me-2"></i> Làm bài ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="submitModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-upload"></i> Nộp bài tập</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleSubmitForm">
+                    <input type="hidden" name="lessonId" id="submitLessonId" />
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tiêu đề bài tập</label>
+                        <input type="text" class="form-control" id="submitLessonName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nội dung bài làm <span class="text-danger">*</span></label>
+                        <textarea name="submissionContent" class="form-control" rows="5" placeholder="Nhập nội dung hoặc link bài làm..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Đính kèm file (tùy chọn)</label>
+                        <input type="file" name="submissionFile" class="form-control">
+                        <small class="text-muted">Hỗ trợ: PDF, DOCX, ZIP, PNG...</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-success" onclick="submitAssignmentFromSchedule()">
+                    <i class="bi bi-send"></i> Nộp ngay
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewSubmissionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle"></i> Bài làm của bạn</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="fw-bold text-muted small">TRẠNG THÁI</label>
+                    <div id="viewStatus"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold text-muted small">THỜI GIAN NỘP</label>
+                    <div id="viewTime" class="fw-bold text-dark"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold text-muted small">NỘI DUNG</label>
+                    <div id="viewContent" class="p-3 bg-light rounded border"></div>
+                </div>
+                <div id="viewFileSection" class="mb-3 d-none">
+                    <label class="fw-bold text-muted small">FILE ĐÍNH KÈM</label>
+                    <div class="mt-1">
+                        <a href="#" id="viewFileLink" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-download"></i> Tải về bài làm
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function openSubmitModal(id, name) {
+            document.getElementById('submitLessonId').value = id;
+            document.getElementById('submitLessonName').value = name;
+            // Reset form
+            document.querySelector('#scheduleSubmitForm textarea').value = '';
+            document.querySelector('#scheduleSubmitForm input[type="file"]').value = '';
+
+            new bootstrap.Modal(document.getElementById('submitModal')).show();
+        }
+
+        // --- 2. XỬ LÝ SUBMIT AJAX ---
+        function submitAssignmentFromSchedule() {
+            var form = document.getElementById('scheduleSubmitForm');
+            var formData = new FormData(form);
+
+            // Validate
+            if (!formData.get('submissionContent') && !formData.get('submissionFile').size) {
+                Swal.fire('Lỗi', 'Vui lòng nhập nội dung hoặc chọn file!', 'warning');
+                return;
+            }
+
+            Swal.fire({ title: 'Đang nộp...', didOpen: () => Swal.showLoading() });
+
+            $.ajax({
+                url: '/Courses/SubmitAssignment',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    if (res.success) {
+                        Swal.fire('Thành công', 'Đã nộp bài!', 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Lỗi', res.message, 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Lỗi', 'Không thể kết nối server', 'error');
+                }
+            });
+        }
+
+        // --- 3. MỞ MODAL XEM BÀI (Cơ bản) ---
+                // --- 3. MỞ MODAL XEM BÀI (Cập nhật) ---
+        function openViewSubmission(date, name, content, fileUrl) {
+            // 1. Hiển thị thông tin cơ bản
+            document.getElementById('viewTime').innerText = date;
+            document.getElementById('viewStatus').innerHTML = '<span class="badge bg-success">Đã nộp thành công</span>';
+
+            // 2. Hiển thị nội dung bài làm (Content)
+            // Nếu nội dung rỗng thì hiện thông báo
+            var contentDisplay = content ? content : "<span class='text-muted fst-italic'>Không có nội dung văn bản.</span>";
+            document.getElementById('viewContent').innerHTML = contentDisplay;
+
+            // 3. Hiển thị file đính kèm (File URL)
+            var fileSection = document.getElementById('viewFileSection');
+            var fileLink = document.getElementById('viewFileLink');
+
+            if (fileUrl) {
+                fileSection.classList.remove('d-none');
+                fileLink.href = fileUrl;
+                // Lấy tên file từ đường dẫn để hiển thị cho đẹp
+                var fileName = fileUrl.split('/').pop();
+                fileLink.innerHTML = `<i class="bi bi-download me-2"></i> Tải về (${fileName})`;
+            } else {
+                fileSection.classList.add('d-none');
+            }
+
+            new bootstrap.Modal(document.getElementById('viewSubmissionModal')).show();
+        }
+        // 1. Logic chuyển Tab
+        document.querySelectorAll('.schedule-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class
+                document.querySelectorAll('.schedule-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content-section').forEach(s => s.classList.remove('active'));
+
+                // Add active class
+                this.classList.add('active');
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId + '-tab').classList.add('active');
+            });
+        });
+
+        // 2. Logic Hiển thị Modal Đề bài
+        function showAssignmentContent(lessonId, title) {
+            var contentDiv = document.getElementById('content-' + lessonId);
+            var contentHtml = contentDiv ? contentDiv.innerHTML : "Không tìm thấy nội dung.";
+
+            document.getElementById('modalAssignTitle').innerText = title;
+            document.getElementById('modalAssignBody').innerHTML = contentHtml;
+            document.getElementById('modalGoToLearnBtn').href = '/Courses/Learn?lessonId=' + lessonId;
+
+            var myModal = new bootstrap.Modal(document.getElementById('assignmentContentModal'));
+            myModal.show();
+        }
+    </script>
+}

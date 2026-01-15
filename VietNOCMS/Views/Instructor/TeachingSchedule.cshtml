@@ -1,0 +1,921 @@
+﻿@model VietNOCMS.Models.TeachingScheduleViewModel
+
+@{
+    ViewData["Title"] = "Lịch Dạy & Chấm Bài";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var activeTab = Context.Request.Query["tab"].ToString();
+    if (string.IsNullOrEmpty(activeTab)) activeTab = "schedule";
+}
+
+@section Styles {
+    <style>
+        /* CSS cho Accordion Chấm bài */
+        .accordion-item {
+            border: 1px solid #e9ecef;
+            border-radius: 8px !important;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .accordion-button {
+            background-color: white;
+            font-weight: 600;
+            color: #333;
+            padding: 1rem 1.25rem;
+        }
+
+            .accordion-button:not(.collapsed) {
+                background-color: #f0f9ff;
+                color: #0d6efd;
+                box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
+            }
+
+            .accordion-button:focus {
+                box-shadow: none;
+                border-color: rgba(0,0,0,.125);
+            }
+
+        /* Danh sách bài tập bên trong */
+        .assignment-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: 0.2s;
+        }
+
+            .assignment-row:last-child {
+                border-bottom: none;
+            }
+
+            .assignment-row:hover {
+                background-color: #fafafa;
+            }
+
+        .progress-track {
+            height: 6px;
+            width: 100px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #198754;
+        }
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .page-header {
+            background-color: white;
+            padding: 24px 0;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+        }
+
+        /* Card Styles */
+        .course-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 4px solid #0d6efd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+            .course-card.overdue {
+                border-left-color: #dc3545;
+            }
+
+            .course-card.upcoming {
+                border-left-color: #fd7e14;
+            }
+
+        /* Buttons */
+        .btn-primary-custom {
+            background-color: #ff4d00;
+            color: white;
+            border: none;
+        }
+
+            .btn-primary-custom:hover {
+                background-color: #e64500;
+                color: white;
+            }
+
+        /* Badges */
+        .badge-count {
+            background-color: #dc3545;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        /* Modal Styles */
+        .submission-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .submission-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+            .submission-item:hover {
+                background-color: #f0f9ff;
+            }
+        /* Hiệu ứng hover rõ hơn */
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #64748b;
+        }
+
+        .submission-meta {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        /* Viewer */
+        .submission-viewer {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 150px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* AI Modal */
+        .bg-gradient-ai {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="container">
+        <h1 class="fw-bold">Lịch Dạy & Chấm Bài</h1>
+        <p class="text-muted">Quản lý lớp học và đánh giá kết quả học viên</p>
+    </div>
+</div>
+
+<div class="container">
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link @(activeTab == "schedule" ? "active" : "")" href="?tab=schedule">
+                <i class="bi bi-calendar3 me-2"></i>Lịch giảng dạy
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(activeTab == "grading" ? "active" : "")" href="?tab=grading">
+                <i class="bi bi-file-text me-2"></i>Chấm bài tập
+                @{
+                    int pendingTotal = Model.PendingGrading.Sum(g => g.PendingCount);
+                    if (pendingTotal > 0)
+                    {
+                        <span class="badge-count">@pendingTotal</span>
+                    }
+                }
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(activeTab == "create" ? "active" : "")" href="?tab=create">
+                <i class="bi bi-plus-circle me-2"></i>Tạo bài tập mới
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        @if (activeTab == "schedule")
+        {
+            <div class="tab-pane fade show active">
+                <div class="mb-3 text-danger fw-bold"><i class="bi bi-clock"></i> Sắp diễn ra</div>
+                @if (Model.ScheduledSessions.Any())
+                {
+                    @foreach (var session in Model.ScheduledSessions)
+                    {
+                       
+                        var endTime = session.StartTime.AddMinutes(session.DurationMinutes);
+                        var isExpired = DateTime.Now > endTime; 
+
+                        <div class="card mb-3 border-0 shadow-sm session-card @(isExpired ? "bg-light opacity-75" : "")">
+                            <div class="card-body d-flex align-items-center">
+
+                                <div class="text-center me-4" style="min-width: 80px;">
+                                    <div class="fw-bold text-primary fs-4">@session.StartTime.ToString("HH:mm")</div>
+                                    <div class="small text-muted">@session.StartTime.ToString("dd/MM")</div>
+
+                                    @if (isExpired)
+                                    {
+                                        <span class="badge bg-secondary mt-1">Đã kết thúc</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success mt-1">Sắp diễn ra</span>
+                                    }
+                                </div>
+
+                                <div class="flex-grow-1 border-start ps-4">
+                                    <h5 class="fw-bold mb-1">
+                                        @session.LessonName
+                                        @if (isExpired)
+                                        {
+                                            <i class="bi bi-check-circle-fill text-success" title="Đã hoàn thành"></i>
+                                        }
+                                    </h5>
+                                    <p class="mb-1 text-muted">
+                                        <i class="bi bi-book me-1"></i> @session.CourseName
+                                    </p>
+                                    <div class="d-flex align-items-center gap-3 font-monospace small text-secondary">
+                                        <span><i class="bi bi-hourglass-split"></i> @session.DurationMinutes phút</span>
+                                        <span><i class="bi bi-people"></i> @session.StudentCount học viên</span>
+                                    </div>
+                                </div>
+
+                                <div class="ms-3">
+                                    @if (isExpired)
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSession(@session.LessonId)" title="Xóa lịch đã xong">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <a href="@session.MeetingLink" target="_blank" class="btn btn-primary btn-sm px-3">
+                                            <i class="bi bi-camera-video me-1"></i> Vào lớp
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+
+                    <div class="text-center text-muted py-5">Hiện không có lịch giảng dạy nào sắp tới.</div>
+                }
+            </div>
+        }
+
+        else if (activeTab == "grading")
+        {
+            <div class="tab-pane fade show active">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-primary fw-bold fs-5">
+                        <i class="bi bi-layers-half me-2"></i> Danh sách Khóa học cần chấm
+                    </div>
+                    <span class="badge bg-danger rounded-pill px-3 py-2">
+                        Tổng cộng: @Model.PendingGrading.Sum(x => x.PendingCount) bài chưa chấm
+                    </span>
+                </div>
+
+                @if (Model.PendingGrading.Any())
+                {
+                    // GOM NHÓM THEO TÊN KHÓA HỌC
+                    var groupedCourses = Model.PendingGrading.GroupBy(x => x.CourseName).ToList();
+                    int accordionIndex = 0; // Biến đếm để tạo ID duy nhất cho accordion
+
+                    <div class="accordion" id="gradingAccordion">
+                        @foreach (var group in groupedCourses)
+                        {
+                            accordionIndex++;
+                            var totalPendingInCourse = group.Sum(x => x.PendingCount);
+                            var totalAssignmentInCourse = group.Count();
+                            var isExpanded = accordionIndex == 1 ? "show" : ""; // Mặc định mở khóa đầu tiên
+                            var btnCollapsed = accordionIndex == 1 ? "" : "collapsed";
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading-@accordionIndex">
+                                    <button class="accordion-button @btnCollapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@accordionIndex">
+                                        <div class="d-flex align-items-center w-100 me-3">
+                                            <div class="me-3">
+                                                <div class="bg-light rounded p-2 text-primary">
+                                                    <i class="bi bi-journal-bookmark-fill fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold fs-6">@group.Key</div>
+                                                <div class="small text-muted">@totalAssignmentInCourse bài tập</div>
+                                            </div>
+                                            <div class="text-end">
+                                                @if (totalPendingInCourse > 0)
+                                                {
+                                                    <span class="badge bg-danger rounded-pill">
+                                                        @totalPendingInCourse bài mới
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success rounded-pill">
+                                                        <i class="bi bi-check-lg"></i> Hoàn tất
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse-@accordionIndex" class="accordion-collapse collapse @isExpanded" data-bs-parent="#gradingAccordion">
+                                    <div class="accordion-body p-0">
+                                        @foreach (var item in group)
+                                        {
+                                            // Tính % tiến độ chấm
+                                            var percent = item.TotalStudents > 0 ? (item.GradedCount * 100 / item.TotalStudents) : 0;
+
+                                            // Lưu nội dung đề bài ẩn để dùng cho Modal
+                                            <textarea id="prompt-@item.LessonId" style="display:none;">@item.AssignmentContent</textarea>
+
+                                            <div class="assignment-row">
+                                                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                                                    <div class="text-center" style="width: 50px;">
+                                                        <div class="fw-bold fs-4 text-primary">@percent%</div>
+                                                        <div class="progress-track mx-auto" style="width: 40px; height: 4px;">
+                                                            <div class="progress-fill" style="width: @percent%;"></div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <h6 class="mb-1 fw-bold">
+                                                            @item.AssignmentTitle
+                                                            @if (item.IsOverdue)
+                                                            {
+                                                                <span class="badge bg-danger ms-2" style="font-size: 0.65rem">Quá hạn</span>
+                                                            }
+                                                        </h6>
+                                                        <div class="small text-muted d-flex gap-3">
+                                                            <span><i class="bi bi-people"></i> Đã nộp: @item.SubmittedCount/@item.TotalStudents</span>
+                                                            <span><i class="bi bi-check2-all"></i> Đã chấm: @item.GradedCount</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    @if (item.PendingCount > 0)
+                                                    {
+                                                        <button class="btn btn-sm btn-primary fw-bold px-3"
+                                                                onclick="openSubmissionList(@item.LessonId, '@item.AssignmentTitle')">
+                                                            Chấm (@item.PendingCount) <i class="bi bi-arrow-right"></i>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-secondary"
+                                                                onclick="openSubmissionList(@item.LessonId, '@item.AssignmentTitle')">
+                                                            Xem lại
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-5 bg-white rounded shadow-sm">
+                        <i class="bi bi-clipboard-check fs-1 text-success opacity-50"></i>
+                        <h5 class="mt-3">Tuyệt vời! Bạn đã hoàn thành tất cả công việc.</h5>
+                        <p>Không còn bài tập nào cần chấm.</p>
+                    </div>
+                }
+            </div>
+        }
+
+        else if (activeTab == "create")
+        {
+            <div class="tab-pane fade show active">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="mb-4 text-dark fw-bold"><i class="bi bi-plus-circle-dotted text-primary"></i> Tạo bài tập mới</h5>
+
+                        <form id="createAssignmentForm" asp-action="CreateLesson" asp-controller="Instructor" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="lessonType" value="Assignment" />
+                            <input type="hidden" name="isFree" value="false" />
+                            <input type="hidden" name="duration" value="0" />
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-secondary">Khóa học</label>
+                                    <select class="form-select" name="courseId" id="courseSelect" required>
+                                        <option value="">-- Chọn khóa học --</option>
+                                        @foreach (var c in Model.MyCourses)
+                                        {
+                                            <option value="@c.CourseId">@c.CourseName</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-secondary">Chương</label>
+                                    <select class="form-select" name="chapterId" id="chapterSelect" disabled required>
+                                        <option value="">-- Vui lòng chọn khóa học trước --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-secondary">Tiêu đề bài tập <span class="text-danger">*</span></label>
+                                <input type="text" name="title" id="assignmentTitle" class="form-control" placeholder="Ví dụ: Xây dựng API TodoList..." required>
+                            </div>
+
+                            <div class="mb-3 position-relative">
+                                <div class="d-flex justify-content-between align-items-end mb-1">
+                                    <label class="form-label fw-semibold text-secondary mb-0">Mô tả / Đề bài chi tiết</label>
+                                    <button type="button" class="btn btn-sm btn-outline-primary border-0 fw-bold" data-bs-toggle="modal" data-bs-target="#aiGeneratorModal" onclick="prepareAiModal()">
+                                        <i class="bi bi-stars text-warning"></i> AI Hỗ trợ viết đề
+                                    </button>
+                                </div>
+                                <textarea class="form-control" name="Content" id="mainAssignmentDesc" rows="8" placeholder="Nhập nội dung đề bài, yêu cầu kỹ thuật..."></textarea>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold text-secondary">Hạn nộp</label>
+                                    <input type="datetime-local" name="dueDate" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold text-secondary">Điểm tối đa</label>
+                                    <div class="input-group">
+                                        <input type="number" name="maxScore" class="form-control" placeholder="100" value="100">
+                                        <span class="input-group-text">điểm</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold text-secondary">Tài liệu đính kèm</label>
+                                    <input type="file" name="documentFile" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                <a href="?tab=schedule" class="btn btn-light border">Hủy bỏ</a>
+                                <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="bi bi-check-lg"></i> Tạo bài tập</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="submissionListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="listModalTitle">Danh sách nộp bài</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="submissionListContent" class="submission-list">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="gradingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Chấm bài: <span id="studentNameTitle"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="fw-bold mb-2 text-muted text-uppercase small">Nội dung bài làm</label>
+                <div id="submissionViewer" class="submission-viewer"></div>
+
+                <div class="row g-3 mt-2 border-top pt-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Điểm số (0-10)</label>
+                        <input type="number" id="gradeScore" class="form-control form-control-lg text-center fw-bold text-primary" min="0" max="100">
+                    </div>
+                    <div class="col-md-9">
+                        <label class="form-label fw-bold">Nhận xét / Góp ý</label>
+                        <textarea id="gradeFeedback" class="form-control" rows="3" placeholder="Nhập nhận xét..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-warning fw-bold text-white" onclick="runAiGrading()">
+                    <i class="bi bi-stars"></i> AI Chấm điểm
+                </button>
+                <button class="btn btn-success px-4 fw-bold" onclick="saveGrade()"><i class="bi bi-check-lg me-2"></i>Lưu kết quả</button>
+               
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aiGeneratorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-gradient-ai text-white">
+                <h5 class="modal-title"><i class="bi bi-robot"></i> Trợ lý soạn đề bài AI</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="mb-3">
+                    <label class="fw-bold text-secondary mb-1">Chủ đề / Ý tưởng:</label>
+                    <div class="input-group">
+                        <input type="text" id="aiPromptInput" class="form-control" placeholder="VD: Bài tập về React Hook...">
+                        <button class="btn btn-primary" type="button" onclick="runAiGenerate()"><i class="bi bi-magic"></i> Tạo nội dung</button>
+                    </div>
+                </div>
+                <div id="aiResultContainer" style="display:none;">
+                    <label class="fw-bold text-success mb-1">Kết quả gợi ý:</label>
+                    <textarea id="aiOutputText" class="form-control bg-white" rows="10"></textarea>
+                </div>
+                <div id="aiLoading" class="text-center py-4" style="display:none;">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">AI đang suy nghĩ...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-success fw-bold" onclick="applyAiContent()"><i class="bi bi-check-circle-fill"></i> Sử dụng nội dung này</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // ==========================================
+        // LOGIC CHẤM BÀI TẬP (ĐÃ FIX LỖI CLICK)
+        // ==========================================
+        let currentProgressId = 0;
+        let submissionsData = []; // Lưu trữ dữ liệu tạm
+        let currentAssignmentTitle = "";
+        let currentAssignmentContent = "";
+
+        function openSubmissionList(lessonId, title) {
+            currentAssignmentTitle = title;
+            currentAssignmentContent = $('#prompt-' + lessonId).val() || "Không có mô tả chi tiết.";
+            $('#listModalTitle').text('Bài nộp: ' + title);
+            $('#submissionListModal').modal('show');
+            $('#submissionListContent').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2">Đang tải danh sách...</p></div>');
+
+            $.get('/Instructor/GetSubmissions?lessonId=' + lessonId, function(data) {
+                submissionsData = data; // Lưu vào biến toàn cục để dùng lại
+
+                let html = '';
+                if (data.length === 0) {
+                    html = '<div class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1"></i><p>Chưa có học viên nào nộp bài.</p></div>';
+                } else {
+                    // Sử dụng Index để tránh lỗi cú pháp khi truyền tham số chuỗi
+                    data.forEach((s, index) => {
+                        let statusBadge = s.score !== null
+                            ? `<span class="badge bg-success"><i class="bi bi-check-all"></i> ${s.score} điểm</span>`
+                            : `<span class="badge bg-warning text-dark">Chưa chấm</span>`;
+
+                        html += `
+                            <div class="submission-item" onclick="openGradingModalByIndex(${index})">
+                                <div class="student-info">
+                                    <div class="student-avatar">${s.studentName.charAt(0)}</div>
+                                    <div>
+                                        <div class="fw-bold text-dark">${s.studentName}</div>
+                                        <div class="submission-meta">Nộp lúc: ${s.submittedAt}</div>
+                                    </div>
+                                </div>
+                                <div>${statusBadge} <i class="bi bi-chevron-right text-muted ms-3"></i></div>
+                            </div>
+                        `;
+                    });
+                }
+                $('#submissionListContent').html(html);
+            });
+        }
+
+        // Hàm mở modal chấm bài dựa trên index
+        function openGradingModalByIndex(index) {
+            const s = submissionsData[index];
+            currentProgressId = s.progressId;
+
+            $('#studentNameTitle').text(s.studentName);
+            $('#gradeScore').val(s.score !== null ? s.score : '');
+            $('#gradeFeedback').val(s.feedback || '');
+
+            const viewer = $('#submissionViewer');
+            viewer.empty();
+
+            if (s.isText) {
+                // Decode nội dung và hiển thị (s.contentPreview đã được xử lý ở server)
+                viewer.html(`<div class="bg-white p-3 border rounded" style="font-family: monospace; white-space: pre-wrap;">${s.contentPreview}</div>`);
+            } else if (s.submissionUrl) {
+                let fileName = s.submissionUrl.split('/').pop();
+                viewer.html(`
+                    <div class="d-flex align-items-center gap-3 p-3 border rounded bg-white">
+                        <i class="bi bi-file-earmark-zip fs-1 text-primary"></i>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-break">${fileName}</div>
+                            <div class="small text-muted">Tệp tin đính kèm</div>
+                        </div>
+                        <a href="${s.submissionUrl}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-download me-2"></i>Tải về
+                        </a>
+                    </div>
+                `);
+            } else {
+                viewer.html('<div class="text-center text-muted py-4">Học viên không gửi nội dung gì.</div>');
+            }
+
+            $('#submissionListModal').modal('hide');
+            $('#gradingModal').modal('show');
+        }
+
+        function saveGrade() {
+            const score = $('#gradeScore').val();
+            const feedback = $('#gradeFeedback').val();
+
+            if (score === '' || score < 0 || score > 100) {
+                Swal.fire('Lỗi', 'Vui lòng nhập điểm hợp lệ (0-100)', 'warning');
+                return;
+            }
+
+            $.post('/Instructor/GradeSubmission', { progressId: currentProgressId, score: score, feedback: feedback }, function(res) {
+                if (res.success) {
+                    Swal.fire('Thành công', 'Đã lưu kết quả!', 'success').then(() => {
+                        $('#gradingModal').modal('hide');
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Lỗi', res.message, 'error');
+                }
+            });
+        }
+
+        // ==========================================
+        // LOGIC TẠO BÀI TẬP (TAB 3)
+        // ==========================================
+
+        // Xử lý Dropdown Chương
+        document.getElementById('courseSelect')?.addEventListener('change', function() {
+            var courseId = this.value;
+            var chapterSelect = document.getElementById('chapterSelect');
+            chapterSelect.innerHTML = '<option value="">-- Đang tải dữ liệu... --</option>';
+            chapterSelect.disabled = true;
+
+            if (courseId) {
+                fetch('/Instructor/GetChapters?courseId=' + courseId)
+                    .then(response => response.json())
+                    .then(data => {
+                        chapterSelect.innerHTML = '<option value="">-- Chọn chương học --</option>';
+                        if (data.length === 0) {
+                            chapterSelect.innerHTML += '<option disabled>Khóa học này chưa có chương nào</option>';
+                        } else {
+                            data.forEach(ch => {
+                                var option = document.createElement('option');
+                                option.value = ch.chapterId;
+                                option.text = ch.chapterName;
+                                chapterSelect.appendChild(option);
+                            });
+                            chapterSelect.disabled = false;
+                        }
+                    });
+            } else {
+                chapterSelect.innerHTML = '<option value="">-- Vui lòng chọn khóa học trước --</option>';
+            }
+        });
+
+        // Xử lý AI Generator
+        function prepareAiModal() {
+            const currentTitle = document.getElementById('assignmentTitle').value;
+            if(currentTitle) document.getElementById('aiPromptInput').value = currentTitle;
+            document.getElementById('aiResultContainer').style.display = 'none';
+            document.getElementById('aiOutputText').value = '';
+        }
+
+        function runAiGenerate() {
+            const topic = document.getElementById('aiPromptInput').value;
+            if (!topic) { Swal.fire('Lỗi', 'Vui lòng nhập chủ đề!', 'warning'); return; }
+
+            document.getElementById('aiLoading').style.display = 'block';
+            document.getElementById('aiResultContainer').style.display = 'none';
+
+            // Lấy token an toàn
+            let token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            $.ajax({
+                url: '/Instructor/AutoGenerateAssignmentDesc',
+                type: 'POST',
+                headers: { "RequestVerificationToken": token },
+                data: { title: topic },
+                success: function(res) {
+                    document.getElementById('aiLoading').style.display = 'none';
+                    if (res.success) {
+                        document.getElementById('aiResultContainer').style.display = 'block';
+                        document.getElementById('aiOutputText').value = res.data;
+                    } else {
+                        Swal.fire('Lỗi AI', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    document.getElementById('aiLoading').style.display = 'none';
+                    Swal.fire('Lỗi', 'Không thể kết nối tới Server.', 'error');
+                }
+            });
+        }
+
+        function applyAiContent() {
+            const content = document.getElementById('aiOutputText').value;
+            if (!content) { alert("Nội dung trống!"); return; }
+
+            const mainInput = document.getElementById('mainAssignmentDesc');
+            if (mainInput) {
+                mainInput.value = content;
+                mainInput.style.borderColor = "#198754";
+                setTimeout(() => mainInput.style.borderColor = "", 2000);
+
+                const modalEl = document.getElementById('aiGeneratorModal');
+                bootstrap.Modal.getInstance(modalEl).hide();
+            }
+        }
+        // ==========================================
+            // XỬ LÝ TẠO BÀI TẬP BẰNG AJAX
+            // ==========================================
+            document.getElementById('createAssignmentForm')?.addEventListener('submit', function(e) {
+                e.preventDefault(); // 1. Chặn trình duyệt chuyển trang
+
+                // 2. Validate Chương học
+                var chapterSelect = document.getElementById('chapterSelect');
+                if (!chapterSelect.value) {
+                    Swal.fire('Lỗi', 'Vui lòng chọn Chương học!', 'warning');
+                    return;
+                }
+
+                // Mở khóa ô select để FormData lấy được dữ liệu
+                chapterSelect.disabled = false;
+
+                // 3. Gom dữ liệu form
+                var formData = new FormData(this);
+
+                // 4. Hiện loading
+                Swal.fire({
+                    title: 'Đang xử lý...',
+                    html: 'Vui lòng đợi trong giây lát',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                // 5. Gửi AJAX
+                $.ajax({
+                    url: this.getAttribute('action'), // Lấy URL từ asp-action
+                    type: 'POST',
+                    data: formData,
+                    processData: false, // Bắt buộc khi dùng FormData
+                    contentType: false, // Bắt buộc khi dùng FormData
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thành công!',
+                                text: 'Đã tạo bài tập mới.',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                // Reload lại trang để thấy bài tập mới hoặc chuyển tab
+                                window.location.href = '?tab=grading';
+                            });
+                        } else {
+                            Swal.fire('Thất bại', res.message || 'Có lỗi xảy ra', 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error(xhr);
+                        Swal.fire('Lỗi hệ thống', 'Không thể kết nối đến server.', 'error');
+                    }
+                });
+            });
+
+            ///AI chấm bài//
+                function runAiGrading() {
+            // 1. Lấy dữ liệu cần thiết
+            // Lấy nội dung bài làm từ div hiển thị (Text hoặc nội dung file đã decode)
+            // Lưu ý: AI chỉ đọc được text, không đọc được file chưa decode
+            var studentContent = $('#submissionViewer').text().trim();
+
+            if (!studentContent || studentContent.length < 10) {
+                Swal.fire('Không thể chấm', 'Nội dung bài làm quá ngắn hoặc là file chưa được đọc nội dung.', 'warning');
+                return;
+            }
+
+            // 2. Hiệu ứng Loading
+            Swal.fire({
+                title: 'AI đang chấm bài...',
+                html: 'Đang phân tích nội dung và đưa ra đánh giá. Vui lòng đợi...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            // 3. Gọi API (Sử dụng AiInstructorController đã có)
+            $.ajax({
+                url: '/AiInstructor/AutoGrade',
+                type: 'POST',
+                data: {
+                  question: "Tiêu đề: " + currentAssignmentTitle + "\n\nYêu cầu chi tiết:\n" + currentAssignmentContent,
+            barem: "Thang điểm 100. Đánh giá dựa trên mức độ hoàn thành các yêu cầu trong đề bài.",
+            answer: studentContent
+                },
+                success: function(res) {
+                    Swal.close(); // Tắt loading
+
+                    if (res.success) {
+                        try {
+                            // Backend trả về JSON dạng string, cần parse ra
+                            // Lưu ý: Nếu Controller của bạn trả về string JSON thuần, dùng JSON.parse.
+                            // Nếu Controller trả về Object Json(new {...}), thì dùng trực tiếp res.data
+
+                            var aiResult = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+
+                            // 4. Điền dữ liệu vào ô nhập
+                            $('#gradeScore').val(aiResult.Score);
+                            $('#gradeFeedback').val(aiResult.Comment + "\n\n(Gợi ý: " + aiResult.Suggestion + ")");
+
+                            // Hiệu ứng báo thành công nhẹ
+                            const Toast = Swal.mixin({
+                                toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+                            });
+                            Toast.fire({ icon: 'success', title: 'AI đã đề xuất điểm số!' });
+
+                        } catch (e) {
+                            console.error(e);
+                            Swal.fire('Lỗi AI', 'AI trả về định dạng không hợp lệ.', 'error');
+                        }
+                    } else {
+                        Swal.fire('Lỗi', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.close();
+                    Swal.fire('Lỗi', 'Không thể kết nối đến Server AI.', 'error');
+                }
+            });
+        }
+       
+   
+        function deleteSession(lessonId) {
+            Swal.fire({
+                title: 'Xóa buổi học này?',
+                text: "Buổi học đã kết thúc. Bạn có chắc muốn xóa nó khỏi lịch (và xóa bài học này) không?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Xóa luôn',
+                cancelButtonText: 'Giữ lại'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Gọi API DeleteLesson đã có sẵn trong InstructorController
+                    $.post('/Instructor/DeleteLesson', { id: lessonId }, function(res) {
+                        if (res.success) {
+                            Swal.fire('Đã xóa!', 'Lịch học đã được dọn dẹp.', 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi', res.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+  
+    </script>
+}

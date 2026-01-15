@@ -1,0 +1,1133 @@
+﻿@{
+    ViewData["Title"] = "Quản lý bài học - Giảng viên";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem 0;
+            margin-top: 70px;
+            color: white;
+        }
+
+
+        .breadcrumb-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+        }
+
+        .breadcrumb-item.active {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .lessons-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .filter-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .lesson-list-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .lesson-list-header {
+            background: linear-gradient(to right, rgba(5, 150, 105, 0.05), transparent);
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lesson-table {
+            width: 100%;
+        }
+
+        .lesson-row {
+            display: grid;
+            grid-template-columns: 50px 60px 1fr 150px 120px 150px 150px;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .lesson-row:hover {
+            background: var(--bg-light);
+        }
+
+        .lesson-row.header {
+            background: var(--bg-light);
+            font-weight: 700;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .lesson-row.header:hover {
+            background: var(--bg-light);
+        }
+
+        .drag-handle-cell {
+            cursor: move;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lesson-number-cell {
+            font-weight: 700;
+            color: var(--text-dark);
+            text-align: center;
+        }
+
+        .lesson-info-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .lesson-title-text {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1rem;
+        }
+
+        .lesson-chapter-text {
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        .lesson-type-cell {
+            text-align: center;
+        }
+
+        .type-badge {
+            padding: 0.4rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .type-video {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+        }
+
+        .type-quiz {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-color);
+        }
+
+        .type-reading {
+            background: rgba(5, 150, 105, 0.1);
+            color: #059669;
+        }
+
+        .type-assignment {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .lesson-duration-cell {
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .lesson-status-cell {
+            text-align: center;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-published {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-draft {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-color);
+        }
+
+        .lesson-actions-cell {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn-action-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #1e40af;
+            transform: scale(1.1);
+        }
+
+        .btn-edit {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #1e40af;
+            transform: scale(1.1);
+        }
+
+        .btn-delete {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content-large {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .btn-close-modal {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: var(--bg-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .btn-close-modal:hover {
+            background: var(--border-color);
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .lesson-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .type-option {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .type-option:hover {
+            border-color: #059669;
+            background: rgba(5, 150, 105, 0.05);
+        }
+
+        .type-option.selected {
+            border-color: #059669;
+            background: rgba(5, 150, 105, 0.1);
+        }
+
+        .type-option input {
+            display: none;
+        }
+
+        .type-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .video-upload-area {
+            border: 3px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-light);
+        }
+
+        .video-upload-area:hover {
+            border-color: #059669;
+            background: rgba(5, 150, 105, 0.05);
+        }
+
+        @@media (max-width: 1024px) {
+            .lesson-row {
+                grid-template-columns: 40px 1fr 120px 100px;
+                gap: 0.75rem;
+            }
+
+            .drag-handle-cell,
+            .lesson-number-cell {
+                display: none;
+            }
+
+            .lesson-duration-cell,
+            .lesson-status-cell {
+                display: none;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .lesson-row {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .lesson-row.header {
+                display: none;
+            }
+
+            .lesson-actions-cell {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="container">
+        <h1 class="text-center mb-2"><i class="bi bi-play-circle"></i> Quản lý bài học</h1>
+        <p class="text-center mb-0 opacity-75">Tạo và chỉnh sửa nội dung bài học cho khóa học</p>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+        <ul class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("MyCourses", "Instructor")">
+                    <i class="bi bi-house"></i> Khóa học của tôi
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <i class="bi bi-chevron-right"></i>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("ManageChapters", "Instructor")">
+                    ASP.NET Core MVC
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <i class="bi bi-chevron-right"></i>
+            </li>
+            <li class="breadcrumb-item active">
+                Quản lý bài học
+            </li>
+        </ul>
+    </div>
+
+    <div class="lessons-container">
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-options">
+                <div class="filter-group">
+                    <label><strong>Chương:</strong></label>
+                    <select class="filter-select">
+                        <option>Tất cả chương</option>
+                        <option>Chương 1: Giới thiệu</option>
+                        <option>Chương 2: Controllers</option>
+                        <option>Chương 3: Views</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><strong>Loại:</strong></label>
+                    <select class="filter-select">
+                        <option>Tất cả</option>
+                        <option>Video</option>
+                        <option>Đọc</option>
+                        <option>Quiz</option>
+                        <option>Bài tập</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><strong>Trạng thái:</strong></label>
+                    <select class="filter-select">
+                        <option>Tất cả</option>
+                        <option>Đã xuất bản</option>
+                        <option>Nháp</option>
+                    </select>
+                </div>
+                <div style="margin-left: auto;">
+                    <button class="btn btn-primary-custom" onclick="openAddLessonModal()">
+                        <i class="bi bi-plus-circle"></i> Thêm bài học
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lessons List -->
+        <div class="lesson-list-card">
+            <div class="lesson-list-header">
+                <h3 class="mb-0" style="font-size: 1.2rem; font-weight: 700;">
+                    <i class="bi bi-list-ul"></i> Danh sách bài học (45)
+                </h3>
+                <button class="btn btn-outline-custom">
+                    <i class="bi bi-sort-down"></i> Sắp xếp
+                </button>
+            </div>
+
+            <div class="lesson-table">
+                <!-- Table Header -->
+                <div class="lesson-row header">
+                    <div class="drag-handle-cell"></div>
+                    <div class="lesson-number-cell">STT</div>
+                    <div>Tên bài học</div>
+                    <div class="lesson-type-cell">Loại</div>
+                    <div class="lesson-duration-cell">Thời lượng</div>
+                    <div class="lesson-status-cell">Trạng thái</div>
+                    <div class="lesson-actions-cell">Hành động</div>
+                </div>
+
+                <!-- Lesson Row 1 -->
+                <div class="lesson-row">
+                    <div class="drag-handle-cell">
+                        <i class="bi bi-grip-vertical"></i>
+                    </div>
+                    <div class="lesson-number-cell">1.1</div>
+                    <div class="lesson-info-cell">
+                        <div class="lesson-title-text">Tổng quan về ASP.NET Core</div>
+                        <div class="lesson-chapter-text">Chương 1: Giới thiệu về ASP.NET Core MVC</div>
+                    </div>
+                    <div class="lesson-type-cell">
+                        <span class="type-badge type-video">
+                            <i class="bi bi-camera-video"></i> Video
+                        </span>
+                    </div>
+                    <div class="lesson-duration-cell">
+                        <i class="bi bi-clock"></i> 15 phút
+                    </div>
+                    <div class="lesson-status-cell">
+                        <span class="status-badge status-published">
+                            <i class="bi bi-check-circle"></i> Đã xuất bản
+                        </span>
+                    </div>
+                    <div class="lesson-actions-cell">
+                        <button class="btn-action-small btn-view" title="Xem trước">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn-action-small btn-edit" title="Chỉnh sửa" onclick="openEditLessonModal(1)">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn-action-small btn-delete" title="Xóa" onclick="deleteLesson(1)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lesson Row 2 -->
+                <div class="lesson-row">
+                    <div class="drag-handle-cell">
+                        <i class="bi bi-grip-vertical"></i>
+                    </div>
+                    <div class="lesson-number-cell">1.2</div>
+                    <div class="lesson-info-cell">
+                        <div class="lesson-title-text">Cài đặt môi trường phát triển</div>
+                        <div class="lesson-chapter-text">Chương 1: Giới thiệu về ASP.NET Core MVC</div>
+                    </div>
+                    <div class="lesson-type-cell">
+                        <span class="type-badge type-video">
+                            <i class="bi bi-camera-video"></i> Video
+                        </span>
+                    </div>
+                    <div class="lesson-duration-cell">
+                        <i class="bi bi-clock"></i> 20 phút
+                    </div>
+                    <div class="lesson-status-cell">
+                        <span class="status-badge status-published">
+                            <i class="bi bi-check-circle"></i> Đã xuất bản
+                        </span>
+                    </div>
+                    <div class="lesson-actions-cell">
+                        <button class="btn-action-small btn-view">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn-action-small btn-edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn-action-small btn-delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lesson Row 3 -->
+                <div class="lesson-row">
+                    <div class="drag-handle-cell">
+                        <i class="bi bi-grip-vertical"></i>
+                    </div>
+                    <div class="lesson-number-cell">1.3</div>
+                    <div class="lesson-info-cell">
+                        <div class="lesson-title-text">Kiến trúc MVC Pattern</div>
+                        <div class="lesson-chapter-text">Chương 1: Giới thiệu về ASP.NET Core MVC</div>
+                    </div>
+                    <div class="lesson-type-cell">
+                        <span class="type-badge type-reading">
+                            <i class="bi bi-file-text"></i> Đọc
+                        </span>
+                    </div>
+                    <div class="lesson-duration-cell">
+                        <i class="bi bi-file-text"></i> 10 phút
+                    </div>
+                    <div class="lesson-status-cell">
+                        <span class="status-badge status-published">
+                            <i class="bi bi-check-circle"></i> Đã xuất bản
+                        </span>
+                    </div>
+                    <div class="lesson-actions-cell">
+                        <button class="btn-action-small btn-view">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn-action-small btn-edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn-action-small btn-delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lesson Row 4 - Draft -->
+                <div class="lesson-row">
+                    <div class="drag-handle-cell">
+                        <i class="bi bi-grip-vertical"></i>
+                    </div>
+                    <div class="lesson-number-cell">1.4</div>
+                    <div class="lesson-info-cell">
+                        <div class="lesson-title-text">Project đầu tiên với ASP.NET Core</div>
+                        <div class="lesson-chapter-text">Chương 1: Giới thiệu về ASP.NET Core MVC</div>
+                    </div>
+                    <div class="lesson-type-cell">
+                        <span class="type-badge type-video">
+                            <i class="bi bi-camera-video"></i> Video
+                        </span>
+                    </div>
+                    <div class="lesson-duration-cell">
+                        <i class="bi bi-clock"></i> 25 phút
+                    </div>
+                    <div class="lesson-status-cell">
+                        <span class="status-badge status-draft">
+                            <i class="bi bi-pencil"></i> Nháp
+                        </span>
+                    </div>
+                    <div class="lesson-actions-cell">
+                        <button class="btn-action-small btn-view">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn-action-small btn-edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn-action-small btn-delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lesson Row 5 - Quiz -->
+                <div class="lesson-row">
+                    <div class="drag-handle-cell">
+                        <i class="bi bi-grip-vertical"></i>
+                    </div>
+                    <div class="lesson-number-cell">1.5</div>
+                    <div class="lesson-info-cell">
+                        <div class="lesson-title-text">Kiểm tra kiến thức Chương 1</div>
+                        <div class="lesson-chapter-text">Chương 1: Giới thiệu về ASP.NET Core MVC</div>
+                    </div>
+                    <div class="lesson-type-cell">
+                        <span class="type-badge type-quiz">
+                            <i class="bi bi-question-circle"></i> Quiz
+                        </span>
+                    </div>
+                    <div class="lesson-duration-cell">
+                        <i class="bi bi-clock"></i> 10 câu
+                    </div>
+                    <div class="lesson-status-cell">
+                        <span class="status-badge status-published">
+                            <i class="bi bi-check-circle"></i> Đã xuất bản
+                        </span>
+                    </div>
+                    <div class="lesson-actions-cell">
+                        <button class="btn-action-small btn-view">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn-action-small btn-edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn-action-small btn-delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Add/Edit Lesson -->
+<div id="lessonModal" class="modal">
+    <div class="modal-content-large">
+        <div class="modal-header">
+            <h3 class="modal-title" id="lessonModalTitle">Thêm bài học mới</h3>
+            <button class="btn-close-modal" onclick="closeLessonModal()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <form>
+            <!-- Lesson Type -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-grid"></i> Loại bài học
+                </div>
+                <div class="lesson-type-selector">
+                    <label class="type-option selected">
+                        <input type="radio" name="lessonType" value="video" checked>
+                        <div class="type-icon">🎥</div>
+                        <div><strong>Video</strong></div>
+                    </label>
+                    <label class="type-option">
+                        <input type="radio" name="lessonType" value="reading">
+                        <div class="type-icon">📖</div>
+                        <div><strong>Đọc</strong></div>
+                    </label>
+                    <label class="type-option">
+                        <input type="radio" name="lessonType" value="quiz">
+                        <div class="type-icon">❓</div>
+                        <div><strong>Quiz</strong></div>
+                    </label>
+                    <label class="type-option">
+                        <input type="radio" name="lessonType" value="assignment">
+                        <div class="type-icon">✍️</div>
+                        <div><strong>Bài tập</strong></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Basic Info -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-info-circle"></i> Thông tin cơ bản
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Chương <span style="color: var(--danger-color);">*</span></label>
+                    <select class="form-select" required>
+                        <option value="">-- Chọn chương --</option>
+                        <option value="1">Chương 1: Giới thiệu về ASP.NET Core MVC</option>
+                        <option value="2">Chương 2: Controllers và Routing</option>
+                        <option value="3">Chương 3: Views và Razor Syntax</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tên bài học <span style="color: var(--danger-color);">*</span></label>
+                    <input type="text" class="form-control" placeholder="VD: Tổng quan về ASP.NET Core" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mô tả ngắn</label>
+                    <textarea class="form-control" rows="3" placeholder="Mô tả ngắn gọn về nội dung bài học..."></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Thời lượng (phút)</label>
+                            <input type="number" class="form-control" min="1" placeholder="15">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select">
+                                <option value="draft">Nháp</option>
+                                <option value="published">Xuất bản</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Content -->
+            <div class="form-section" id="videoSection">
+                <div class="section-title">
+                    <i class="bi bi-camera-video"></i> Nội dung video
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tải video lên <span style="color: var(--danger-color);">*</span></label>
+                    <div class="video-upload-area">
+                        <i class="bi bi-cloud-upload" style="font-size: 3rem; color: var(--text-light);"></i>
+                        <h4>Kéo thả video vào đây hoặc nhấp để chọn</h4>
+                        <p class="text-muted">Định dạng: MP4, MOV, AVI | Dung lượng tối đa: 500MB</p>
+                        <input type="file" accept="video/*" style="display: none;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Hoặc URL video (YouTube, Vimeo...)</label>
+                    <input type="url" class="form-control" placeholder="https://youtube.com/watch?v=...">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn btn-outline-custom" onclick="closeLessonModal()">Hủy</button>
+                <button type="submit" name="action" value="draft" class="btn btn-draft">
+                    <i class="bi bi-file-earmark"></i> Lưu nháp
+                </button>
+                <!-- Reading Content -->
+                <div class="form-section" id="readingSection" style="display: none;">
+                    <div class="section-title">
+                        <i class="bi bi-file-text"></i> Nội dung đọc
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nội dung bài đọc <span style="color: var(--danger-color);">*</span></label>
+                        <textarea class="form-control" rows="10" placeholder="Nhập nội dung bài đọc..."></textarea>
+                        <small class="text-muted">Hỗ trợ định dạng Markdown</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Đính kèm tài liệu (PDF, DOCX)</label>
+                        <input type="file" class="form-control" accept=".pdf,.doc,.docx">
+                    </div>
+                </div>
+
+                <!-- Quiz Content -->
+                <div class="form-section" id="quizSection" style="display: none;">
+                    <div class="section-title">
+                        <i class="bi bi-question-circle"></i> Câu hỏi quiz
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Sau khi lưu bài học, bạn có thể thêm câu hỏi quiz trong trang chỉnh sửa chi tiết
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Số câu hỏi dự kiến</label>
+                        <input type="number" class="form-control" min="1" value="10" placeholder="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Điểm qua bài (%))</label>
+                        <input type="number" class="form-control" min="0" max="100" value="70" placeholder="70">
+                    </div>
+                </div>
+
+                <!-- Assignment Content -->
+                <div class="form-section" id="assignmentSection" style="display: none;">
+                    <div class="section-title">
+                        <i class="bi bi-pencil-square"></i> Thông tin bài tập
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mô tả bài tập <span style="color: var(--danger-color);">*</span></label>
+                        <textarea class="form-control" rows="5" placeholder="Mô tả chi tiết yêu cầu bài tập..."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Hạn nộp (ngày)</label>
+                                <input type="number" class="form-control" min="1" value="7" placeholder="7">
+                                <small class="text-muted">Số ngày kể từ khi học viên bắt đầu học</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Điểm tối đa</label>
+                                <input type="number" class="form-control" min="1" value="100" placeholder="100">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Đính kèm tài liệu hướng dẫn</label>
+                        <input type="file" class="form-control" accept=".pdf,.doc,.docx,.zip">
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2 justify-content-end mt-4">
+                    <button type="button" class="btn btn-outline-custom" onclick="closeLessonModal()">Hủy</button>
+                    <button type="submit" name="action" value="draft" class="btn btn-draft">
+                        <i class="bi bi-file-earmark"></i> Lưu nháp
+                    </button>
+                    <button type="submit" name="action" value="publish" class="btn btn-primary-custom">
+                        <i class="bi bi-check-circle"></i> Lưu và xuất bản
+                    </button>
+                </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Global variables
+        let currentEditingLessonId = null;
+
+        // Modal functions
+        function openAddLessonModal() {
+            document.getElementById('lessonModalTitle').textContent = 'Thêm bài học mới';
+            document.getElementById('lessonModal').classList.add('show');
+            currentEditingLessonId = null;
+            resetForm();
+        }
+
+        function openEditLessonModal(lessonId) {
+            document.getElementById('lessonModalTitle').textContent = 'Chỉnh sửa bài học';
+            document.getElementById('lessonModal').classList.add('show');
+            currentEditingLessonId = lessonId;
+            // Load lesson data here
+            loadLessonData(lessonId);
+        }
+
+        function closeLessonModal() {
+            document.getElementById('lessonModal').classList.remove('show');
+            resetForm();
+        }
+
+        function resetForm() {
+            document.querySelector('#lessonModal form').reset();
+            // Reset to video type
+            document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelector('.type-option').classList.add('selected');
+            showLessonTypeContent('video');
+        }
+
+        function loadLessonData(lessonId) {
+            // Simulated data loading - replace with actual API call
+            console.log('Loading lesson data for ID:', lessonId);
+            // Here you would fetch data and populate the form
+        }
+
+        // Lesson type selector
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeOptions = document.querySelectorAll('.type-option');
+
+            typeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    typeOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    const input = this.querySelector('input');
+                    input.checked = true;
+                    showLessonTypeContent(input.value);
+                });
+            });
+
+            // Drag and drop functionality
+            initDragAndDrop();
+
+            // Filter functionality
+            initFilters();
+
+            // Close modal on outside click
+            document.getElementById('lessonModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeLessonModal();
+                }
+            });
+        });
+
+        function showLessonTypeContent(type) {
+            // Hide all content sections
+            document.getElementById('videoSection').style.display = 'none';
+            document.getElementById('readingSection').style.display = 'none';
+            document.getElementById('quizSection').style.display = 'none';
+            document.getElementById('assignmentSection').style.display = 'none';
+
+            // Show selected section
+            switch(type) {
+                case 'video':
+                    document.getElementById('videoSection').style.display = 'block';
+                    break;
+                case 'reading':
+                    document.getElementById('readingSection').style.display = 'block';
+                    break;
+                case 'quiz':
+                    document.getElementById('quizSection').style.display = 'block';
+                    break;
+                case 'assignment':
+                    document.getElementById('assignmentSection').style.display = 'block';
+                    break;
+            }
+        }
+
+        // Drag and Drop functionality
+        function initDragAndDrop() {
+            const lessonRows = document.querySelectorAll('.lesson-row:not(.header)');
+            let draggedElement = null;
+
+            lessonRows.forEach(row => {
+                const dragHandle = row.querySelector('.drag-handle-cell');
+
+                dragHandle.addEventListener('mousedown', function(e) {
+                    row.setAttribute('draggable', true);
+                });
+
+                row.addEventListener('dragstart', function(e) {
+                    draggedElement = this;
+                    this.style.opacity = '0.5';
+                });
+
+                row.addEventListener('dragend', function(e) {
+                    this.style.opacity = '1';
+                    this.setAttribute('draggable', false);
+                });
+
+                row.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    if (this !== draggedElement && !this.classList.contains('header')) {
+                        const rect = this.getBoundingClientRect();
+                        const midpoint = rect.top + rect.height / 2;
+
+                        if (e.clientY < midpoint) {
+                            this.parentNode.insertBefore(draggedElement, this);
+                        } else {
+                            this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                        }
+                    }
+                });
+            });
+
+            console.log('Drag and drop initialized for', lessonRows.length, 'lessons');
+        }
+
+        // Filter functionality
+        function initFilters() {
+            const filterSelects = document.querySelectorAll('.filter-select');
+
+            filterSelects.forEach(select => {
+                select.addEventListener('change', function() {
+                    applyFilters();
+                });
+            });
+        }
+
+        function applyFilters() {
+            const chapterFilter = document.querySelectorAll('.filter-select')[0].value;
+            const typeFilter = document.querySelectorAll('.filter-select')[1].value;
+            const statusFilter = document.querySelectorAll('.filter-select')[2].value;
+
+            const lessonRows = document.querySelectorAll('.lesson-row:not(.header)');
+
+            lessonRows.forEach(row => {
+                let showRow = true;
+
+                // Apply filters logic here
+                // This is a simplified version - you'd need to add data attributes to rows
+                // and match against the filter values
+
+                row.style.display = showRow ? '' : 'none';
+            });
+
+            console.log('Filters applied:', { chapterFilter, typeFilter, statusFilter });
+        }
+
+        // Delete lesson
+        function deleteLesson(lessonId) {
+            if (confirm('Bạn có chắc chắn muốn xóa bài học này?')) {
+                console.log('Deleting lesson:', lessonId);
+                // Add delete API call here
+                // On success, remove the row from DOM
+                alert('Đã xóa bài học!');
+            }
+        }
+
+        // Video upload area interaction
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.querySelector('.video-upload-area');
+            const fileInput = uploadArea?.querySelector('input[type="file"]');
+
+            if (uploadArea && fileInput) {
+                uploadArea.addEventListener('click', function() {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        const fileName = this.files[0].name;
+                        uploadArea.querySelector('h4').textContent = `Đã chọn: ${fileName}`;
+                        uploadArea.style.borderColor = '#059669';
+                        uploadArea.style.background = 'rgba(5, 150, 105, 0.1)';
+                    }
+                });
+
+                // Drag and drop for video upload
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.style.borderColor = '#059669';
+                    this.style.background = 'rgba(5, 150, 105, 0.1)';
+                });
+
+                uploadArea.addEventListener('dragleave', function(e) {
+                    this.style.borderColor = '';
+                    this.style.background = '';
+                });
+
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.borderColor = '';
+                    this.style.background = '';
+
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        fileInput.files = e.dataTransfer.files;
+                        const fileName = e.dataTransfer.files[0].name;
+                        this.querySelector('h4').textContent = `Đã chọn: ${fileName}`;
+                        this.style.borderColor = '#059669';
+                        this.style.background = 'rgba(5, 150, 105, 0.1)';
+                    }
+                });
+            }
+        });
+
+        // Form submission
+        document.querySelector('#lessonModal form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const action = e.submitter.value; // 'draft' or 'publish'
+
+            console.log('Submitting form with action:', action);
+
+            // Add your API call here
+            // On success:
+            alert(`Đã lưu bài học ${action === 'draft' ? 'vào nháp' : 'và xuất bản'}!`);
+            closeLessonModal();
+
+            // Optionally reload the lesson list or add the new lesson to the DOM
+        });
+    </script>
+}

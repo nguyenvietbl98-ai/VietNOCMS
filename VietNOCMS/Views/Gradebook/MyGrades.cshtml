@@ -1,0 +1,220 @@
+﻿@model IEnumerable<VietNOCMS.Models.Enrollment>
+
+@{
+    ViewData["Title"] = "Tra cứu kết quả học tập";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary text-white p-3 rounded-circle me-3 shadow-sm">
+            <i class="bi bi-mortarboard-fill fs-3"></i>
+        </div>
+        <div>
+            <h2 class="fw-bold mb-0 text-dark">Tra cứu kết quả học tập</h2>
+            <p class="text-muted mb-0">Xem lịch sử điểm số và chứng chỉ của bạn</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3 text-secondary text-uppercase small fw-bold">Khóa học</th>
+                            <th class="text-center text-secondary text-uppercase small fw-bold">Ngày ghi danh</th>
+                            <th class="text-center text-secondary text-uppercase small fw-bold">Điểm tổng kết</th>
+                            <th class="text-center text-secondary text-uppercase small fw-bold">Xếp loại</th>
+                            <th class="text-center text-secondary text-uppercase small fw-bold">Chứng chỉ</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-primary">@item.Course.CourseName</div>
+                                        <small class="text-muted">GV: @(item.Course.Instructor?.FullName ?? "N/A")</small>
+                                    </td>
+                                    <td class="text-center text-muted">
+                                        @item.EnrollmentAt.ToString("dd/MM/yyyy")
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.FinalScore.HasValue)
+                                        {
+                                            <span class="fw-bold fs-5 @(item.FinalScore >= 5.0 ? "text-success" : "text-danger")">
+                                                @item.FinalScore
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-secondary border">Đang học</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (!string.IsNullOrEmpty(item.Rank))
+                                        {
+                                            var colorClass = item.FinalScore >= 8.0 ? "bg-success" :
+                                            (item.FinalScore >= 5.0 ? "bg-primary" : "bg-warning text-dark");
+                                            <span class="badge @colorClass">@item.Rank</span>
+                                        }
+                                        else
+                                        {
+                                            <span>--</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.IsCertified)
+                                        {
+                                            <button class="btn btn-sm btn-warning text-white fw-bold shadow-sm" onclick="showCertAlert('@item.Course.CourseName')">
+                                                <i class="bi bi-award-fill"></i> Tải về
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small"><i class="bi bi-lock-fill"></i> Chưa đạt</span>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <button onclick="openDetailModal(@item.CourseId, '@item.Course.CourseName')"
+                                                class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                            Chi tiết <i class="bi bi-arrow-right"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-journal-x fs-1 d-block mb-3 opacity-50"></i>
+                                    Bạn chưa tham gia khóa học nào.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="scoreDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="modalCourseTitle">Chi tiết điểm số</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="modalLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+                </div>
+
+                <div id="modalContent" style="display:none;">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Bài tập</th>
+                                <th class="text-center">Ngày nộp</th>
+                                <th class="text-center">Điểm số</th>
+                                <th class="text-center">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scoreTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Hàm thông báo chứng chỉ
+        function showCertAlert(courseName) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Chứng chỉ: ' + courseName,
+                text: 'Hệ thống đang xử lý file PDF của bạn!',
+                confirmButtonText: 'OK'
+            });
+        }
+
+        // Hàm mở Modal và tải dữ liệu từ API
+        function openDetailModal(courseId, courseName) {
+            // 1. Cập nhật tiêu đề và hiện Modal
+            document.getElementById('modalCourseTitle').innerText = 'Bảng điểm: ' + courseName;
+            var myModal = new bootstrap.Modal(document.getElementById('scoreDetailModal'));
+            myModal.show();
+
+            // 2. Reset trạng thái loading
+            document.getElementById('modalLoading').style.display = 'block';
+            document.getElementById('modalContent').style.display = 'none';
+            document.getElementById('scoreTableBody').innerHTML = '';
+
+            // 3. Gọi API lấy dữ liệu
+            fetch('/Gradebook/GetCourseDetails?courseId=' + courseId)
+                .then(response => response.json())
+                .then(res => {
+                    document.getElementById('modalLoading').style.display = 'none';
+
+                    if (res.success && res.data.length > 0) {
+                        document.getElementById('modalContent').style.display = 'block';
+
+                        let html = '';
+                        res.data.forEach(item => {
+                            // Xử lý hiển thị trạng thái và màu sắc
+                            let statusBadge = '';
+                            let scoreDisplay = '--';
+
+                            if (item.status === 'graded') {
+                                statusBadge = '<span class="badge bg-success">Đã chấm</span>';
+                                scoreDisplay = `<span class="fw-bold text-primary">${item.score}</span>`;
+                            } else if (item.status === 'pending') {
+                                statusBadge = '<span class="badge bg-warning text-dark">Chờ chấm</span>';
+                            } else {
+                                statusBadge = '<span class="badge bg-secondary opacity-50">Chưa làm</span>';
+                            }
+
+                            html += `
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold">${item.lessonName}</div>
+                                        ${item.feedback ? `<div class="small text-muted fst-italic mt-1"><i class="bi bi-chat-quote me-1"></i>"${item.feedback}"</div>` : ''}
+                                    </td>
+                                    <td class="text-center text-muted small">${item.submittedAt}</td>
+                                    <td class="text-center fs-5">${scoreDisplay}</td>
+                                    <td class="text-center">${statusBadge}</td>
+                                </tr>
+                            `;
+                        });
+                        document.getElementById('scoreTableBody').innerHTML = html;
+                    } else if (res.success && res.data.length === 0) {
+                        document.getElementById('modalContent').style.display = 'block';
+                        document.getElementById('scoreTableBody').innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Khóa học này chưa có bài tập nào.</td></tr>';
+                    } else {
+                        // Trường hợp lỗi hoặc không có dữ liệu
+                        document.getElementById('modalContent').style.display = 'block';
+                        document.getElementById('scoreTableBody').innerHTML = `<tr><td colspan="4" class="text-center py-4 text-danger">${res.message || 'Không có dữ liệu'}</td></tr>`;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('modalLoading').style.display = 'none';
+                    Swal.fire('Lỗi', 'Không thể kết nối đến server.', 'error');
+                });
+        }
+    </script>
+}

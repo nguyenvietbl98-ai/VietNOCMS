@@ -1,0 +1,997 @@
+﻿@model VietNOCMS.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Khóa học của tôi";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --border-radius-lg: 16px;
+            --border-radius-md: 12px;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Header Section */
+        .page-header {
+            background: var(--primary-gradient);
+            padding: 4rem 0 6rem;
+            margin-top: -30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .page-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            }
+
+            .page-header h1 {
+                color: white;
+                font-weight: 700;
+                font-size: 2.5rem;
+                margin-bottom: 0.75rem;
+                position: relative;
+                z-index: 1;
+            }
+
+            .page-header .lead {
+                color: rgba(255, 255, 255, 0.95);
+                font-size: 1.1rem;
+                font-weight: 400;
+                position: relative;
+                z-index: 1;
+            }
+
+        /* Stats Overview */
+        .stats-overview {
+            margin-top: -4rem;
+            position: relative;
+            z-index: 10;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 1.75rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition-smooth);
+            height: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+            .stat-card:hover {
+                transform: translateY(-8px);
+                box-shadow: var(--card-shadow-hover);
+            }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--border-radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Action Section */
+        .action-section {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary-custom {
+            background: var(--success-gradient);
+            color: white;
+            padding: 0.75rem 1.75rem;
+            border-radius: 10px;
+            font-weight: 600;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+        }
+
+            .btn-primary-custom:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(5, 150, 105, 0.3);
+                color: white;
+            }
+
+        /* Course Card */
+        .instructor-course-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition-smooth);
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+            .instructor-course-card:hover {
+                box-shadow: var(--card-shadow-hover);
+                transform: translateY(-4px);
+            }
+
+        .course-header {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.75rem;
+            background: linear-gradient(to bottom, #fafafa 0%, white 100%);
+        }
+
+        .course-thumbnail {
+            width: 220px;
+            height: 145px;
+            border-radius: var(--border-radius-md);
+            background: var(--success-gradient);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+            .course-thumbnail img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .course-status-badge {
+            position: absolute;
+            top: 0.65rem;
+            right: 0.65rem;
+            padding: 0.4rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .status-published {
+            background: rgba(34, 197, 94, 0.95);
+            color: white;
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+        }
+
+        .status-draft {
+            background: rgba(245, 158, 11, 0.95);
+            color: white;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        .course-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .course-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.65rem;
+            line-height: 1.3;
+        }
+
+        .course-category {
+            display: inline-block;
+            padding: 0.35rem 0.85rem;
+            background: rgba(5, 150, 105, 0.1);
+            color: #059669;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.85rem;
+        }
+
+        .course-meta-info {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            color: #64748b;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .course-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+            .course-meta-item i {
+                color: #94a3b8;
+            }
+
+        .course-actions {
+            display: flex;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+        }
+
+        /* Course Body */
+        .course-body {
+            padding: 1.75rem;
+            background: #f8fafc;
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .course-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .mini-stat {
+            text-align: center;
+            padding: 1.25rem;
+            background: white;
+            border-radius: 10px;
+            transition: var(--transition-smooth);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+            .mini-stat:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            }
+
+        .mini-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: var(--success-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .mini-stat-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.35rem;
+            font-weight: 500;
+        }
+
+        /* Course Footer */
+        .course-footer {
+            padding: 1.25rem 1.75rem;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+            .course-footer .text-muted {
+                font-size: 0.85rem;
+                color: #94a3b8;
+                font-weight: 500;
+            }
+
+        /* Buttons */
+        .btn-action {
+            padding: 0.6rem 1.15rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-chapters {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+        }
+
+            .btn-chapters:hover {
+                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+                transform: translateY(-2px);
+                color: white;
+            }
+
+        .btn-toggle {
+            background: #64748b;
+            color: white;
+        }
+
+            .btn-toggle:hover {
+                background: #475569;
+                transform: translateY(-2px);
+            }
+
+            .btn-toggle.active {
+                background: linear-gradient(135deg, #10b981, #059669);
+            }
+
+        .btn-outline-warning {
+            border: 2px solid #f59e0b;
+            color: #f59e0b;
+            background: white;
+        }
+
+            .btn-outline-warning:hover {
+                background: #f59e0b;
+                color: white;
+                transform: translateY(-2px);
+            }
+
+        .btn-details {
+            background: transparent;
+            border: 2px solid #f59e0b;
+            color: #f59e0b;
+            padding: 0.6rem 1.15rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+            .btn-details:hover {
+                background: #f59e0b;
+                color: white;
+                transform: translateY(-2px);
+            }
+
+        .btn-delete {
+            background: transparent;
+            color: #ef4444;
+            border: 2px solid #ef4444;
+            padding: 0.6rem 1.15rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+            .btn-delete:hover {
+                background: #ef4444;
+                color: white;
+                transform: translateY(-2px);
+            }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 5rem 2rem;
+            background: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+        }
+
+            .empty-state i {
+                font-size: 5rem;
+                color: #cbd5e1;
+                margin-bottom: 1.5rem;
+            }
+
+            .empty-state h3 {
+                color: #1e293b;
+                font-weight: 700;
+                margin-bottom: 0.75rem;
+            }
+
+            .empty-state p {
+                color: #64748b;
+                font-size: 1rem;
+            }
+
+        /* Modal Styling */
+        .modal-content {
+            border-radius: var(--border-radius-lg);
+            border: none;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+        }
+
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .stats-overview {
+                margin-top: -3rem;
+            }
+
+            .stat-card {
+                padding: 1.25rem;
+            }
+
+            .stat-value {
+                font-size: 1.75rem;
+            }
+
+            .course-header {
+                flex-direction: column;
+            }
+
+            .course-thumbnail {
+                width: 100%;
+                height: 200px;
+            }
+
+            .course-title {
+                font-size: 1.25rem;
+            }
+
+            .course-actions {
+                width: 100%;
+            }
+
+            .btn-action {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .course-footer {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+        }
+
+        .course-btn-modern {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            color: #1e293b; /* slate-800 */
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+            transition: all 0.25s ease;
+        }
+
+            .course-btn-modern i {
+                font-size: 1.1rem;
+                color: #2563eb; /* blue-600 */
+            }
+
+            .course-btn-modern:hover {
+                transform: translateY(-2px);
+                background: linear-gradient(135deg, #2563eb, #3b82f6);
+                color: #ffffff;
+                box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+            }
+
+                .course-btn-modern:hover i {
+                    color: #ffffff;
+                }
+
+            .course-btn-modern:active {
+                transform: scale(0.96);
+            }
+            .course-btn-gradebook {
+    color: #92400e; /* amber-800 */
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-color: #f59e0b;
+}
+
+.course-btn-gradebook i {
+    color: #b45309;
+}
+
+.course-btn-gradebook:hover {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.35);
+    transform: translateY(-2px);
+}
+
+.course-btn-gradebook:hover i {
+    color: #ffffff;
+}
+
+/* ===================== */
+/* ĐÁNH GIÁ – INFO */
+/* ===================== */
+.course-btn-review {
+    color: #1e40af; /* blue-800 */
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-color: #93c5fd;
+}
+
+.course-btn-review i {
+    color: #2563eb;
+}
+
+.course-btn-review:hover {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+    transform: translateY(-2px);
+}
+
+.course-btn-review:hover i {
+    color: #ffffff;
+}
+
+/* Click effect */
+.course-btn:active {
+    transform: scale(0.96);
+}
+
+    </style>
+}
+
+<div class="page-header">
+    <div class="container">
+        <h1><i class="bi bi-book-half"></i> Khóa học của tôi</h1>
+        <p class="lead">Quản lý và theo dõi các khóa học bạn đang giảng dạy</p>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Stats Overview -->
+    <div class="stats-overview">
+        <div class="row g-3">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(5, 150, 105, 0.1); color: #059669;">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="stat-value">@Model.MyCoursesCount</div>
+                    <div class="stat-label">Tổng khóa học</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(102, 126, 234, 0.1); color: #667eea;">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="stat-value">@Model.MyStudentsCount.ToString("N0")</div>
+                    <div class="stat-label">Tổng học viên</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <div class="stat-value">@Model.AverageRating</div>
+                    <div class="stat-label">Đánh giá TB</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div class="stat-value">@Model.TotalRevenue.ToString("N0")đ</div>
+                    <div class="stat-label">Doanh thu</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Section -->
+    <div class="action-section">
+        <div>
+            <h5 class="mb-0" style="color: #1e293b; font-weight: 600;">Danh sách khóa học</h5>
+            <p class="mb-0 text-muted small">Quản lý nội dung và theo dõi hiệu suất</p>
+        </div>
+        <a href="@Url.Action("CreateCourse", "Instructor")" class="btn-primary-custom">
+            <i class="bi bi-plus-circle"></i> Tạo khóa học mới
+        </a>
+    </div>
+
+    <!-- Courses List -->
+    <div class="courses-list">
+        @if (Model.DisplayCourses != null && Model.DisplayCourses.Any())
+        {
+            @foreach (var course in Model.DisplayCourses)
+            {
+                <div class="instructor-course-card" data-status="@(course.IsPublished ? "published" : "draft")">
+                    <div class="course-header">
+                        <div class="course-thumbnail">
+                            @if (!string.IsNullOrEmpty(course.Thumbnail))
+                            {
+                                <img src="~/uploads/@course.Thumbnail" alt="@course.CourseName" />
+                            }
+                            else
+                            {
+                                <i class="bi bi-book-fill"></i>
+                            }
+
+                            @if (course.IsPublished)
+                            {
+                                <span class="course-status-badge status-published">
+                                    <i class="bi bi-check-circle-fill"></i> Đã xuất bản
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="course-status-badge status-draft">
+                                    <i class="bi bi-pencil-fill"></i> Nháp
+                                </span>
+                            }
+                        </div>
+
+                        <div class="course-info">
+                            <h3 class="course-title">@course.CourseName</h3>
+                            <span class="course-category">@course.CategoryName</span>
+
+                            <div class="course-meta-info">
+                                <span class="course-meta-item">
+                                    <i class="bi bi-calendar3"></i> @course.CreatedAt.ToString("dd/MM/yyyy")
+                                </span>
+                                <span class="course-meta-item">
+                                    <i class="bi bi-clock-history"></i> @course.UpdatedAt.ToString("dd/MM/yyyy")
+                                </span>
+                                <span class="course-meta-item">
+                                    <i class="bi bi-cash-coin"></i> @(course.IsPaid? course.OriginalPrice.ToString("N0") + "đ" : "Miễn phí")
+                                </span>
+                            </div>
+
+                            <div class="course-actions">
+                                <a href="@Url.Action("AddContent", "Instructor", new { id = course.CourseId })" class="course-btn-modern">
+                                    <i class="bi bi-folder2-open"></i> Chương
+                                </a>
+                                <a href="@Url.Action("Details", "Courses", new { id = course.CourseId })" class="course-btn-modern">
+                                    <i class="bi bi-folder2-open"></i> Chi tiết
+                                </a>
+                                @if (course.IsPublished)
+                                {
+                                    <button class="course-btn-modern" onclick="togglePublish(@course.CourseId)">
+                                        <i class="bi bi-eye-fill"></i> Hiện
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="course-btn-modern" onclick="togglePublish(@course.CourseId)">
+                                        <i class="bi bi-eye-slash-fill"></i> Ẩn
+                                    </button>
+                                }
+
+                                <a href="/Gradebook/Index?courseId=@course.CourseId" class="course-btn-modern">
+                                    <i class="bi bi-folder2-open"></i> Sổ điểm
+                                </a>
+
+                                <button type="button" class="course-btn-modern" onclick="openReviewsModal(@course.CourseId, '@System.Web.HttpUtility.JavaScriptStringEncode(course.CourseName)')">
+                                    <i class="bi bi-folder2-open"></i> Đánh giá
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="course-body">
+                        <div class="course-stats-grid">
+                            <div class="mini-stat">
+                                <div class="mini-stat-value">@course.StudentCount</div>
+                                <div class="mini-stat-label">Học viên</div>
+                            </div>
+                            <div class="mini-stat">
+                                <div class="mini-stat-value">@course.LessonCount</div>
+                                <div class="mini-stat-label">Bài học</div>
+                            </div>
+                            <div class="mini-stat">
+                                <div class="mini-stat-value">@course.Rating</div>
+                                <div class="mini-stat-label">Đánh giá</div>
+                            </div>
+                            <div class="mini-stat">
+                                <div class="mini-stat-value">@course.ReviewCount</div>
+                                <div class="mini-stat-label">Lượt đánh giá</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="course-footer">
+                        <span class="text-muted">
+                            <i class="bi bi-hash"></i> ID: @course.CourseId
+                        </span>
+                        <button class="btn-action btn-delete" onclick="deleteCourse(@course.CourseId)">
+                            <i class="bi bi-trash3"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="bi bi-journal-x"></i>
+                <h3>Bạn chưa có khóa học nào</h3>
+                <p class="text-muted">Bắt đầu tạo khóa học đầu tiên để chia sẻ kiến thức của bạn</p>
+                <a href="@Url.Action("CreateCourse", "Instructor")" class="btn-primary-custom mt-3">
+                    <i class="bi bi-plus-circle"></i> Tạo ngay
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Reviews Modal -->
+<div class="modal fade" id="reviewsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-star-half text-warning me-2"></i>
+                    Đánh giá: <span id="reviewModalCourseName" class="text-primary"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="reviewsList" class="p-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                const filter = this.innerText.trim().toLowerCase();
+                const cards = document.querySelectorAll('.instructor-course-card');
+
+                cards.forEach(card => {
+                    const status = card.getAttribute('data-status');
+                    if (filter.includes('tất cả') ||
+                       (filter.includes('xuất bản') && status === 'published') ||
+                       (filter.includes('nháp') && status === 'draft')) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        function togglePublish(courseId) {
+            Swal.fire({
+                title: 'Thay đổi trạng thái?',
+                text: "Khóa học sẽ được Chuyển sang chế độ Công khai hoặc Riêng tư (Nháp).",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Instructor/TogglePublish/' + courseId, {
+                        __RequestVerificationToken: document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }, function(res) {
+                        if (res.success) {
+                            var statusText = res.isPublished ? "Đã Xuất bản (Public)" : "Đã chuyển về Nháp (Draft)";
+                            var iconType = res.isPublished ? "success" : "info";
+
+                            Swal.fire(
+                                'Thành công!',
+                                'Khóa học hiện đang: ' + statusText,
+                                iconType
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Lỗi', res.message, 'error');
+                        }
+                    }).fail(function() {
+                        Swal.fire('Lỗi', 'Không thể kết nối tới máy chủ', 'error');
+                    });
+                }
+            });
+        }
+
+        function deleteCourse(courseId) {
+            Swal.fire({
+                title: 'Xóa khóa học?',
+                text: "Hành động này không thể hoàn tác!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Vẫn xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Đang xử lý...', didOpen: () => Swal.showLoading() });
+
+                    $.post('/Instructor/DeleteCourse/' + courseId, function(res) {
+                        if (res.success) {
+                            Swal.fire('Đã xóa!', res.message, 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Không thể xóa',
+                                text: res.message,
+                                footer: '<a href="#" onclick="togglePublish(' + courseId + '); Swal.close();">Bấm vào đây để Ẩn khóa học ngay</a>'
+                            });
+                        }
+                    }).fail(function() {
+                        Swal.fire('Lỗi', 'Không kết nối được server', 'error');
+                    });
+                }
+            });
+        }
+
+        function openReviewsModal(courseId, courseName) {
+            $('#reviewModalCourseName').text(courseName);
+            $('#reviewsModal').modal('show');
+            $('#reviewsList').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>');
+
+            $.get('/Instructor/GetCourseReviews?courseId=' + courseId, function(res) {
+                if (!res.success) {
+                    $('#reviewsList').html(`<div class="alert alert-danger">${res.message}</div>`);
+                    return;
+                }
+
+                if (res.data.length === 0) {
+                    $('#reviewsList').html(`
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-chat-square-text fs-1 opacity-25"></i>
+                            <p class="mt-2">Chưa có đánh giá nào cho khóa học này.</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                let html = '';
+                res.data.forEach(r => {
+                    let stars = '';
+                    for(let i=1; i<=5; i++) {
+                        stars += i <= r.rating
+                            ? '<i class="bi bi-star-fill text-warning"></i>'
+                            : '<i class="bi bi-star text-muted opacity-25"></i>';
+                    }
+
+                    let replySection = '';
+                    if (r.reply) {
+                        replySection = `
+                            <div class="bg-light p-3 rounded mt-3 border-start border-4 border-primary">
+                                <div class="d-flex align-items-center mb-1">
+                                    <strong class="text-primary me-2"><i class="bi bi-person-badge"></i> Giảng viên</strong>
+                                    <small class="text-muted">${r.replyAt}</small>
+                                </div>
+                                <p class="mb-0 text-secondary">${r.reply}</p>
+                            </div>
+                        `;
+                    } else {
+                        replySection = `
+                            <div class="mt-3 reply-box-${r.reviewId}">
+                                <button class="btn btn-sm btn-outline-primary" onclick="$('#form-reply-${r.reviewId}').slideToggle()">
+                                    <i class="bi bi-reply"></i> Trả lời
+                                </button>
+                                <div id="form-reply-${r.reviewId}" style="display:none;" class="mt-2">
+                                    <textarea id="txt-reply-${r.reviewId}" class="form-control mb-2" rows="2" placeholder="Nhập phản hồi của bạn..."></textarea>
+                                    <button class="btn btn-sm btn-primary" onclick="submitReply(${r.reviewId})">Gửi phản hồi</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                        <div class="card mb-3 border shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex gap-3">
+                                    <div class="rounded-circle bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center fw-bold text-secondary" style="width:50px; height:50px; flex-shrink:0;">
+                                        ${r.studentName.charAt(0)}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">${r.studentName}</h6>
+                                                <div class="small text-warning mb-1">${stars}</div>
+                                            </div>
+                                            <small class="text-muted">${r.date}</small>
+                                        </div>
+                                        <p class="mb-0 text-dark" style="font-size: 0.95rem;">${r.comment}</p>
+
+                                        ${replySection}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                $('#reviewsList').html(html);
+            });
+        }
+
+        function submitReply(reviewId) {
+            const content = $(`#txt-reply-${reviewId}`).val();
+            if (!content.trim()) {
+                Swal.fire('Lỗi', 'Vui lòng nhập nội dung!', 'warning');
+                return;
+            }
+
+            $.post('/Instructor/ReplyToReview', { reviewId: reviewId, replyContent: content }, function(res) {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đã gửi phản hồi!',
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: 2000
+                    });
+
+                    const today = new Date().toLocaleDateString('en-GB');
+                    $(`.reply-box-${reviewId}`).html(`
+                        <div class="bg-light p-3 rounded mt-3 border-start border-4 border-primary">
+                            <div class="d-flex align-items-center mb-1">
+                                <strong class="text-primary me-2"><i class="bi bi-person-badge"></i> Giảng viên</strong>
+                                <small class="text-muted">${today}</small>
+                            </div>
+                            <p class="mb-0 text-secondary">${content}</p>
+                        </div>
+                    `);
+                } else {
+                    Swal.fire('Lỗi', res.message, 'error');
+                }
+            });
+        }
+    </script>
+}

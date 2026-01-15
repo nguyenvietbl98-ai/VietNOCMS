@@ -1,0 +1,424 @@
+﻿@model VietNOCMS.Models.RecruitmentCenterViewModel
+@{
+    ViewData["Title"] = "Trung tâm Tuyển dụng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-0"><i class="bi bi-briefcase"></i> Trung tâm Tuyển dụng</h2>
+            <p class="text-muted small">Tìm kiếm cơ hội giảng dạy hoặc tìm cộng sự cho khóa học của bạn</p>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills mb-4 gap-2 bg-light p-2 rounded-pill d-inline-flex" id="pills-tab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill px-4" id="pills-market-tab" data-bs-toggle="pill" data-bs-target="#pills-market" type="button">
+                <i class="bi bi-globe"></i> Sàn Tuyển Dụng
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4" id="pills-my-posts-tab" data-bs-toggle="pill" data-bs-target="#pills-my-posts" type="button">
+                <i class="bi bi-person-workspace"></i> Quản lý tin đăng
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4 position-relative" id="pills-approve-tab" data-bs-toggle="pill" data-bs-target="#pills-approve" type="button">
+                <i class="bi bi-check-circle"></i> Duyệt yêu cầu
+                @if (Model.PendingApplications.Count > 0)
+                {
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        @Model.PendingApplications.Count
+                    </span>
+                }
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+
+        <div class="tab-pane fade show active" id="pills-market">
+            <div class="row">
+                @if (Model.MarketPosts.Any())
+                {
+                    @foreach (var item in Model.MarketPosts)
+                    {
+                        // Lấy trạng thái của mình đối với khóa học này
+                        string myStatus = "";
+                        if (Model.MyStatus != null && Model.MyStatus.ContainsKey(item.CourseId))
+                        {
+                            myStatus = Model.MyStatus[item.CourseId];
+                        }
+
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 shadow-sm border-0 hover-effect">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <img src="@(!string.IsNullOrEmpty(item.Instructor.Avatar) ? "/uploads/avatars/" + item.Instructor.Avatar : "/img/default-avatar.png")"
+                                             class="rounded-circle me-2 shadow-sm" width="45" height="45" style="object-fit:cover">
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">@item.Instructor.FullName</h6>
+                                            <small class="text-success"><i class="bi bi-check-circle-fill"></i> Đang tuyển dụng</small>
+                                        </div>
+                                    </div>
+
+                                    <h5 class="text-primary text-truncate">
+                                        <a href="/Courses/Details/@item.CourseId" class="text-decoration-none">@item.CourseName</a>
+                                    </h5>
+                                    <span class="badge bg-light text-dark border mb-2">@item.Category.CategoryName</span>
+                                    <p class="text-muted small line-clamp-2">@item.ShortDescription</p>
+
+                                    <hr class="opacity-25" />
+
+                                    <div class="mt-auto">
+                                        @if (string.IsNullOrEmpty(myStatus))
+                                        {
+                                            <button class="btn btn-outline-primary w-100" onclick="applyJob(@item.CourseId)">
+                                                <i class="bi bi-send"></i> Ứng tuyển ngay
+                                            </button>
+                                        }
+                                        else if (myStatus == "Accepted")
+                                        {
+                                            <a href="/Instructor/MyCourses" class="btn btn-success w-100">
+                                                <i class="bi bi-briefcase-fill"></i> Vào dạy ngay
+                                            </a>
+                                        }
+                                        else if (myStatus == "Pending_Approval")
+                                        {
+                                            <button class="btn btn-secondary w-100" disabled>
+                                                <i class="bi bi-hourglass-split"></i> Đang chờ duyệt
+                                            </button>
+                                        }
+                                        else if (myStatus == "Pending_Invite")
+                                        {
+                                            <a href="/Collaborator/MyInvitations" class="btn btn-warning w-100">
+                                                <i class="bi bi-envelope-exclamation"></i> Xem lời mời
+                                            </a>
+                                        }
+                                        else if (myStatus == "Rejected")
+                                        {
+                                            <button class="btn btn-outline-danger w-100" disabled>
+                                                <i class="bi bi-x-circle"></i> Hồ sơ bị từ chối
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12 text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-1 opacity-50 mb-3 d-block"></i>
+                        <p>Hiện chưa có tin tuyển dụng nào trên sàn.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-my-posts">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-4 text-primary">Quản lý trạng thái tuyển dụng các khóa học</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Khóa học</th>
+                                    <th>Trạng thái hiện tại</th>
+                                    <th class="text-end">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var course in Model.MyCourses)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">@course.CourseName</div>
+                                            <small class="text-muted">Ngày tạo: @course.CreatedAt.ToString("dd/MM/yyyy")</small>
+                                        </td>
+                                        <td>
+                                            <span id="status-text-@course.CourseId" class="badge rounded-pill @(course.IsRecruiting ? "bg-success" : "bg-secondary")">
+                                                @(course.IsRecruiting ? "Đang tuyển dụng" : "Đang ẩn tin")
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <button class="btn btn-sm @(course.IsRecruiting ? "btn-outline-danger" : "btn-primary")"
+                                                    onclick="toggleRecruitment(@course.CourseId, this)">
+                                                <i class="bi @(course.IsRecruiting ? "bi-eye-slash" : "bi-megaphone")"></i>
+                                                @(course.IsRecruiting ? "Gỡ tin xuống" : "Đăng tin tuyển")
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-approve">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-4 text-primary">Danh sách ứng viên đang chờ duyệt</h5>
+                    @if (Model.PendingApplications.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ứng viên</th>
+                                        <th>Ứng tuyển vào khóa</th>
+                                        <th>Vị trí</th>
+                                        <th>Lời nhắn</th>
+                                        <th class="text-end" style="min-width: 150px;">Xử lý</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                <tbody>
+                                    @foreach (var app in Model.PendingApplications)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="@(!string.IsNullOrEmpty(app.Collaborator.Avatar) ? "/uploads/avatars/" + app.Collaborator.Avatar : "/img/default-avatar.png")"
+                                                         class="rounded-circle me-2" width="40" height="40" style="object-fit:cover">
+                                                    <div>
+                                                        <div class="fw-bold">@app.Collaborator.FullName</div>
+                                                        <small class="text-muted">@app.Collaborator.Email</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <td><span class="fw-bold text-primary">@app.Course.CourseName</span></td>
+
+                                            <td>
+                                                @if (app.Role == "CoInstructor")
+                                                {
+                                                    <span class="badge bg-warning text-dark border border-warning">
+                                                        <i class="bi bi-person-video3"></i> Giảng viên phụ
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-info text-dark border border-info">
+                                                        <i class="bi bi-person-check"></i> Trợ giảng
+                                                    </span>
+                                                }
+                                            </td>
+
+                                            <td>
+                                                <div class="bg-light p-2 rounded small fst-italic text-secondary" style="max-width: 300px;">
+                                                    "@app.Message"
+                                                </div>
+                                            </td>
+
+                                            <td class="text-end">
+                                                <div class="btn-group">
+                                                    <button onclick="reviewApp(@app.Id, 'Approve')" class="btn btn-success btn-sm" title="Duyệt">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </button>
+                                                    <button onclick="reviewApp(@app.Id, 'Reject')" class="btn btn-outline-danger btn-sm" title="Từ chối">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>                         </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-clipboard-check fs-1 opacity-50 mb-3 d-block"></i>
+                            <p>Không có yêu cầu nào cần duyệt lúc này.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ứng tuyển tham gia khóa học</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="applyForm" onsubmit="submitApplication(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="applyCourseId" name="courseId" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Bạn muốn ứng tuyển vị trí nào?</label>
+                        <select class="form-select" name="role" required>
+                            <option value="Assistant">Trợ giảng (Chấm bài, hỗ trợ học viên)</option>
+                            <option value="CoInstructor">Giảng viên phụ (Soạn bài, sửa nội dung, chấm bài)</option>
+                        </select>
+                        <div class="form-text text-muted mt-2">
+                            <small class="d-block">
+                                <i class="bi bi-info-circle"></i> <b>Quyền hạn chi tiết:</b><br>
+                                - <b>Trợ giảng:</b> Chỉ có quyền chấm điểm bài tập.<br>
+                                - <b>GV phụ:</b> Có quyền sửa nội dung bài học và chấm điểm.<br>
+                                - <b>PS:</b> Hoa hồng, lương tự thảo luận với giảng viên chính.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Lời nhắn giới thiệu</label>
+                        <textarea class="form-control" name="message" rows="3"
+                                  placeholder="Giới thiệu ngắn về kinh nghiệm, chứng chỉ của bạn..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Gửi hồ sơ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .hover-effect {
+            transition: transform 0.2s;
+        }
+
+            .hover-effect:hover {
+                transform: translateY(-5px);
+            }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // 0. Tự động chuyển tab dựa trên query parameter
+        $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            if (tab === 'approve') {
+                $('#pills-approve-tab').tab('show');
+            } else if (tab === 'my-posts') {
+                $('#pills-my-posts-tab').tab('show');
+            }
+        });
+
+        // 1. Logic Đăng tin / Gỡ tin (Tab 2)
+        function toggleRecruitment(courseId, btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+            btn.disabled = true;
+
+            $.post('/Recruitment/ToggleRecruitment', { courseId: courseId }, function(res) {
+                btn.disabled = false;
+                if(res.success) {
+                    if(res.isRecruiting) {
+                        btn.innerHTML = '<i class="bi bi-eye-slash"></i> Gỡ tin xuống';
+                        btn.className = "btn btn-sm btn-outline-danger";
+                        $(`#status-text-${courseId}`).removeClass('bg-secondary').addClass('bg-success').text('Đang tuyển dụng');
+                        Swal.fire('Đã đăng tin!', 'Khóa học của bạn đã hiển thị trên sàn tuyển dụng.', 'success');
+                    } else {
+                        btn.innerHTML = '<i class="bi bi-megaphone"></i> Đăng tin tuyển';
+                        btn.className = "btn btn-sm btn-primary";
+                        $(`#status-text-${courseId}`).removeClass('bg-success').addClass('bg-secondary').text('Đang ẩn tin');
+                        Swal.fire('Đã gỡ tin!', 'Đã ẩn khóa học khỏi sàn tuyển dụng.', 'success');
+                    }
+                } else {
+                    btn.innerHTML = originalHtml;
+                    Swal.fire('Lỗi', res.message, 'error');
+                }
+            });
+        }
+
+        // 2. Logic Duyệt / Từ chối (Tab 3)
+        function reviewApp(id, action) {
+            Swal.showLoading();
+            $.post('/Collaborator/ReviewApplication', { id: id, action: action }, function(res) {
+                if(res.success) {
+                    Swal.fire('Thành công', 'Đã xử lý hồ sơ', 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Lỗi', res.message, 'error');
+                }
+            });
+        }
+
+        // 3. Logic Ứng tuyển MỚI (Mở Modal)
+        function applyJob(courseId) {
+            // Gán ID khóa học vào input hidden
+            var hiddenInput = document.getElementById('applyCourseId');
+            if(hiddenInput){
+                hiddenInput.value = courseId;
+                // Reset form cũ
+                document.getElementById('applyForm').reset();
+                // Mở modal bằng Bootstrap API
+                var myModal = new bootstrap.Modal(document.getElementById('applyModal'));
+                myModal.show();
+            } else {
+                console.error("Không tìm thấy input ID 'applyCourseId'. Hãy kiểm tra lại HTML Modal.");
+                Swal.fire('Lỗi giao diện', 'Vui lòng tải lại trang', 'error');
+            }
+        }
+
+        // 4. Logic Gửi form ứng tuyển (Ajax)
+        function submitApplication(e) {
+            e.preventDefault();
+
+            var form = document.getElementById('applyForm');
+            var formData = new FormData(form);
+
+            // Hiệu ứng loading
+            var btn = form.querySelector('button[type="submit"]');
+            var originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang gửi...';
+
+            $.ajax({
+                url: '/Collaborator/Apply',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    if(res.success) {
+                        // Ẩn modal thủ công
+                        var modalEl = document.getElementById('applyModal');
+                        var modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        if (modalInstance) modalInstance.hide();
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công!',
+                            text: res.message,
+                            confirmButtonText: 'Tuyệt vời'
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire('Lỗi', res.message, 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                },
+                error: function() {
+                    Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,950 @@
+﻿@model List<VietNOCMS.Models.InstructorRequestViewModel>
+
+@{
+    ViewData["Title"] = "Duyệt giảng viên";
+    // Tính toán thống kê
+    var pendingCount = Model.Count(r => r.Status == "Pending");
+    var approvedCount = Model.Count(r => r.Status == "Approved");
+    var rejectedCount = Model.Count(r => r.Status == "Rejected");
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 16px;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+        }
+
+            .stats-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            }
+
+            .stats-card.pending {
+                border-left-color: var(--warning-color);
+            }
+
+            .stats-card.approved {
+                border-left-color: var(--success-color);
+            }
+
+            .stats-card.rejected {
+                border-left-color: var(--danger-color);
+            }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .stats-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-custom {
+            margin: 0;
+        }
+
+            .table-custom thead {
+                background: var(--bg-light);
+            }
+
+            .table-custom th {
+                font-weight: 600;
+                color: var(--text-dark);
+                padding: 1rem;
+                border: none;
+            }
+
+            .table-custom td {
+                padding: 1rem;
+                vertical-align: middle;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .table-custom tbody tr:hover {
+                background: var(--bg-light);
+            }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar-table {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .user-info-table {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name-table {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .user-email-table {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+            .status-badge.pending {
+                background: #fef3c7;
+                color: #92400e;
+            }
+
+            .status-badge.approved {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .status-badge.rejected {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-view {
+            background: var(--info-color);
+            color: white;
+        }
+
+            .btn-view:hover {
+                background: #2563eb;
+                transform: translateY(-2px);
+            }
+
+        .btn-approve {
+            background: var(--success-color);
+            color: white;
+        }
+
+            .btn-approve:hover {
+                background: #059669;
+                transform: translateY(-2px);
+            }
+
+        .btn-reject {
+            background: var(--danger-color);
+            color: white;
+        }
+
+            .btn-reject:hover {
+                background: #dc2626;
+                transform: translateY(-2px);
+            }
+
+        .search-box {
+            position: relative;
+        }
+
+            .search-box i {
+                position: absolute;
+                left: 1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-light);
+            }
+
+            .search-box input {
+                padding-left: 3rem;
+            }
+
+        .pagination-custom {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+        }
+
+            .pagination-custom .page-link {
+                color: var(--primary-color);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                margin: 0 0.25rem;
+                padding: 0.5rem 1rem;
+                font-weight: 500;
+            }
+
+                .pagination-custom .page-link:hover {
+                    background: var(--primary-color);
+                    color: white;
+                }
+
+            .pagination-custom .page-item.active .page-link {
+                background: var(--primary-color);
+                border-color: var(--primary-color);
+            }
+        /* Modal Custom Styles */
+        .detail-section .section-header {
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 2.5rem;
+            box-shadow: 0 5px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+            .info-item i {
+                font-size: 1.5rem;
+                color: var(--primary-color);
+                margin-top: 0.25rem;
+            }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .certificate-list, .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .certificate-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: 10px;
+            border-left: 4px solid var(--success-color);
+        }
+
+            .certificate-item i {
+                font-size: 1.5rem;
+                margin-top: 0.25rem;
+            }
+
+        .cert-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .cert-org {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+        }
+
+            .file-item i {
+                font-size: 2rem;
+            }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .file-size {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+            .timeline::before {
+                content: '';
+                position: absolute;
+                left: 10px;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background: var(--border-color);
+            }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -1.5rem;
+            top: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--border-color);
+        }
+
+        .timeline-content {
+            padding-left: 1rem;
+        }
+
+        .timeline-header {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-time {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-desc {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+        /* Print styles */
+        @@media print {
+            .navbar, .filter-section, .action-buttons, .modal, .pagination-custom {
+                display: none !important;
+            }
+
+            .page-header {
+                background: none !important;
+                color: black !important;
+            }
+
+            .table-container {
+                box-shadow: none !important;
+            }
+        }
+
+        /* Toast notification positioning */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        /* Smooth transitions */
+        * {
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* Loading overlay (if needed) */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Enhanced modal backdrop */
+        .modal-backdrop.show {
+            opacity: 0.7;
+        }
+
+        /* Status badge pulse animation */
+        .status-badge.pending {
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        /* Improved button hover effects */
+        .btn-action {
+            position: relative;
+            overflow: hidden;
+        }
+
+            .btn-action::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 0;
+                height: 0;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.3);
+                transform: translate(-50%, -50%);
+                transition: width 0.6s, height 0.6s;
+            }
+
+            .btn-action:hover::before {
+                width: 300px;
+                height: 300px;
+            }
+
+        /* Card hover effects */
+        .stats-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+            .stats-card::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+                transform: rotate(45deg);
+                transition: all 0.5s;
+            }
+
+            .stats-card:hover::before {
+                right: -150%;
+            }
+
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar for modals */
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: var(--bg-light);
+            border-radius: 10px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+            .modal-body::-webkit-scrollbar-thumb:hover {
+                background: var(--secondary-color);
+            }
+
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+    </style>
+}
+
+<div class="page-container">
+    <div class="container-fluid px-4">
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center px-4">
+                <div>
+                    <h2 class="mb-2"><i class="bi bi-person-check"></i> Duyệt giảng viên</h2>
+                    <p class="mb-0" style="opacity: 0.9;">Quản lý và phê duyệt yêu cầu đăng ký giảng viên</p>
+                </div>
+                <div>
+                    <button class="btn btn-light" onclick="location.reload()">
+                        <i class="bi bi-arrow-clockwise"></i> Làm mới
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="stats-card pending">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="stats-label">Chờ duyệt</div>
+                            <div class="stats-number" style="color: var(--warning-color);">@pendingCount</div>
+                        </div>
+                        <i class="bi bi-clock-history" style="font-size: 3rem; color: var(--warning-color); opacity: 0.2;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stats-card approved">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="stats-label">Đã duyệt</div>
+                            <div class="stats-number" style="color: var(--success-color);">@approvedCount</div>
+                        </div>
+                        <i class="bi bi-check-circle" style="font-size: 3rem; color: var(--success-color); opacity: 0.2;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stats-card rejected">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="stats-label">Từ chối</div>
+                            <div class="stats-number" style="color: var(--danger-color);">@rejectedCount</div>
+                        </div>
+                        <i class="bi bi-x-circle" style="font-size: 3rem; color: var(--danger-color); opacity: 0.2;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+        </div>
+
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="table table-custom">
+                    <thead>
+                        <tr>
+                            <th>Giảng viên</th>
+                            <th>Ngày đăng ký</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar-table">
+                                            @(item.FullName?.Substring(0, 1).ToUpper() ?? "U")
+                                        </div>
+                                        <div class="user-info-table">
+                                            <div class="user-name-table">@item.FullName</div>
+                                            <div class="user-email-table">@item.Email</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>@item.RequestedAt.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (item.Status == "Pending")
+                                    {
+                                        <span class="status-badge pending"><i class="bi bi-clock"></i> Chờ duyệt</span>
+                                    }
+                                    else if (item.Status == "Approved")
+                                    {
+                                        <span class="status-badge approved"><i class="bi bi-check-circle"></i> Đã duyệt</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge rejected"><i class="bi bi-x-circle"></i> Từ chối</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action btn-view" onclick="viewDetail(@item.RequestId)">
+                                            <i class="bi bi-eye"></i> Xem
+                                        </button>
+                                        @if (item.Status == "Pending")
+                                        {
+                                            <button class="btn-action btn-approve" onclick="approveInstructor(@item.RequestId, '@item.FullName')">
+                                                <i class="bi bi-check-lg"></i> Duyệt
+                                            </button>
+                                            <button class="btn-action btn-reject" onclick="rejectInstructor(@item.RequestId, '@item.FullName')">
+                                                <i class="bi bi-x-lg"></i> Từ chối
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <nav class="pagination-custom">
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 16px 16px 0 0; padding: 1.5rem;">
+                <h5 class="modal-title">
+                    <i class="bi bi-file-person"></i> Chi tiết hồ sơ giảng viên
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <div class="detail-section mb-4">
+                    <h6 class="section-header" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px; font-weight: bold;">
+                        <i class="bi bi-person-circle"></i> Thông tin cá nhân
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-12 text-center mb-4">
+                            <div class="user-avatar-large" style="width: 80px; height: 80px; background: #667eea; color: white; font-size: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold;">NT</div>
+                            <h5 class="mt-3 mb-1">Đang tải...</h5>
+                            <p class="text-muted">email@example.com</p>
+                            <span class="status-badge pending">...</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item p-3 bg-light rounded">
+                                <div class="info-label text-muted small">Số điện thoại</div>
+                                <div class="info-value fw-bold phone-val">...</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item p-3 bg-light rounded">
+                                <div class="info-label text-muted small">Mạng xã hội</div>
+                                <div class="info-value fw-bold social-val">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section mb-4">
+                    <h6 class="section-header" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px; font-weight: bold;">
+                        <i class="bi bi-briefcase"></i> Thông tin chuyên môn
+                    </h6>
+                    <div class="info-item p-3 bg-light rounded mb-3">
+                        <div class="info-label text-muted small">Mô tả / Kinh nghiệm</div>
+                        <div class="info-value bio-val" style="white-space: pre-line;">...</div>
+                    </div>
+                </div>
+
+                <div class="detail-section mb-4">
+                    <h6 class="section-header" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px; font-weight: bold;">
+                        <i class="bi bi-paperclip"></i> File đính kèm (CV)
+                    </h6>
+                    <div id="fileListArea">
+                        <p class="text-muted fst-italic">Đang tải...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: #f8fafc;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-danger" onclick="showRejectModal()">Từ chối</button>
+                <button type="button" class="btn btn-success" onclick="showApproveModal()">Phê duyệt</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="approveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle"></i> Xác nhận phê duyệt</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                <h5 class="mt-3">Phê duyệt giảng viên <strong></strong>?</h5>
+                <p class="text-muted">Tài khoản này sẽ được chuyển sang quyền Giảng viên (Instructor).</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-success" onclick="confirmApprove()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-x-circle"></i> Từ chối yêu cầu</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="form-group">
+                    <label class="fw-bold mb-2">Lý do từ chối:</label>
+                    <select class="form-select mb-3" id="rejectReason">
+                        <option value="">-- Chọn lý do --</option>
+                        <option value="Hồ sơ thiếu thông tin">Hồ sơ thiếu thông tin</option>
+                        <option value="Chưa đủ điều kiện chuyên môn">Chưa đủ điều kiện chuyên môn</option>
+                        <option value="Thông tin không chính xác">Thông tin không chính xác</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                    <textarea class="form-control" rows="4" placeholder="Nhập chi tiết lý do..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" onclick="confirmReject()">Xác nhận từ chối</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        let currentRequestId = 0;
+
+        // 1. XEM CHI TIẾT (Gọi AJAX lấy dữ liệu thật)
+        function viewDetail(id) {
+            currentRequestId = id;
+
+            // Reset lại trạng thái "Đang tải..." trước khi mở
+            $('#fileListArea').html('<p class="text-muted fst-italic">Đang tải...</p>');
+            $('#detailModal').modal('show');
+
+            // Gọi API
+            $.get('/Admin/GetRequestDetail/' + id, function(data) {
+                console.log("Dữ liệu nhận được:", data); // 👇 Kiểm tra F12 xem có cvUrl không?
+
+                const modal = $('#detailModal');
+
+                // 1. Binding thông tin cơ bản
+                modal.find('.user-avatar-large').text(data.name ? data.name.charAt(0) : 'U');
+                modal.find('h5.mt-3').text(data.name);
+                modal.find('.text-muted').first().text(data.email);
+                modal.find('.phone-val').text(data.phone);
+
+                // 2. Binding Mô tả / Kinh nghiệm (Bio)
+                // Sử dụng .html() hoặc .text() tùy vào việc Bio có chứa thẻ xuống dòng không
+                modal.find('.bio-val').text(data.bio);
+
+                // 3. Binding Mạng xã hội
+                let socialHtml = '';
+                if(data.linkedIn) socialHtml += `<a href="${data.linkedIn}" target="_blank" class="me-2 text-decoration-none"><i class="bi bi-linkedin"></i> LinkedIn</a>`;
+                if(data.facebook) socialHtml += `<a href="${data.facebook}" target="_blank" class="text-decoration-none"><i class="bi bi-facebook"></i> Facebook</a>`;
+                if(!socialHtml) socialHtml = '<span class="text-muted">Không có</span>';
+                modal.find('.social-val').html(socialHtml);
+
+                // 4. Xử lý File đính kèm (QUAN TRỌNG NHẤT)
+                let fileHtml = '';
+                if (data.cvUrl) {
+                    // Logic đường dẫn: Nếu DB lưu tên file "abc.pdf" -> nối thêm "/uploads/"
+                    // Nếu DB lưu full link "https://..." -> giữ nguyên
+                    let fileLink = data.cvUrl.includes('/') ? data.cvUrl : '/uploads/' + data.cvUrl;
+
+                    fileHtml = `
+                        <div class="d-flex align-items-center p-3 border rounded bg-white shadow-sm">
+                            <i class="bi bi-file-earmark-pdf-fill text-danger fs-1 me-3"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold text-dark">Hồ sơ năng lực (CV)</h6>
+                                <small class="text-muted">Nhấn nút bên cạnh để tải về</small>
+                            </div>
+                            <a href="${fileLink}" target="_blank" class="btn btn-primary btn-sm px-3">
+                                <i class="bi bi-download"></i> Tải xuống
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    fileHtml = `
+                        <div class="alert alert-warning d-flex align-items-center mb-0">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>Người dùng chưa tải lên CV hoặc File đính kèm.</div>
+                        </div>
+                    `;
+                }
+                // Gán HTML vào div
+                $('#fileListArea').html(fileHtml);
+
+                // 5. Xử lý nút duyệt/từ chối
+                if (data.status !== 'pending') {
+                    modal.find('.modal-footer .btn-success, .modal-footer .btn-danger').hide();
+                } else {
+                    modal.find('.modal-footer .btn-success, .modal-footer .btn-danger').show();
+                }
+
+            }).fail(function() {
+                Swal.fire('Lỗi', 'Không thể tải thông tin giảng viên', 'error');
+                $('#fileListArea').html('<p class="text-danger">Lỗi tải dữ liệu.</p>');
+            });
+        }
+
+        // 2. CHUẨN BỊ DUYỆT
+        function approveInstructor(id, name) {
+            currentRequestId = id;
+            // Nếu name không truyền vào (khi bấm từ modal chi tiết), lấy từ modal chi tiết
+            const instructorName = name || $('#detailModal h5.mt-3').text();
+
+            $('#approveModal').find('strong').text(instructorName);
+            $('#detailModal').modal('hide');
+            $('#approveModal').modal('show');
+        }
+
+        // 3. XÁC NHẬN DUYỆT (Gọi AJAX POST)
+        function confirmApprove() {
+            $('#approveModal').modal('hide');
+            Swal.showLoading();
+
+            $.post('/Admin/ApproveRequest/' + currentRequestId, function(response) {
+                if (response.success) {
+                    Swal.fire('Thành công', response.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Lỗi', response.message, 'error');
+                }
+            });
+        }
+
+        // 4. CHUẨN BỊ TỪ CHỐI
+        function rejectInstructor(id, name) {
+            currentRequestId = id;
+            const instructorName = name || $('#detailModal h5.mt-3').text();
+
+            $('#rejectModal').find('strong').text(instructorName);
+            $('#detailModal').modal('hide');
+            $('#rejectModal').modal('show');
+        }
+
+        // 5. XÁC NHẬN TỪ CHỐI (Gọi AJAX POST)
+        function confirmReject() {
+            const reason = $('#rejectReason').val();
+            const detail = $('#rejectModal textarea').val();
+
+            if (!reason) {
+                Swal.fire('Lỗi', 'Vui lòng chọn lý do từ chối', 'warning');
+                return;
+            }
+
+            $('#rejectModal').modal('hide');
+            Swal.showLoading();
+
+            $.post('/Admin/RejectRequest', { id: currentRequestId, reason: detail }, function(response) {
+                if (response.success) {
+                    Swal.fire('Đã từ chối', response.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Lỗi', response.message, 'error');
+                }
+            });
+        }
+    </script>
+}

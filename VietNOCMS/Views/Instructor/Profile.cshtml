@@ -1,0 +1,549 @@
+﻿@model VietNOCMS.ViewModels.InstructorProfileViewModel
+
+@{
+    ViewData["Title"] = "Hồ sơ Giảng viên - " + Model.Instructor.FullName;
+}
+@using System.Security.Claims
+
+<style>
+    :root {
+        --primary: #4f46e5;
+        --primary-light: #818cf8;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
+        --bg-light: #f8fafc;
+        --border: #e2e8f0;
+    }
+
+    .profile-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    /* Avatar Section - Simple & Clean */
+    .avatar-section {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 1rem;
+    }
+
+    .avatar-placeholder {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+
+    .instructor-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+    }
+
+    .instructor-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Stats - Minimal */
+    .stats {
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .stat-label {
+        font-size: 0.813rem;
+        color: var(--text-muted);
+    }
+
+    /* Buttons - Small & Nice */
+    .btn-group-custom {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .btn-sm-custom {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .btn-primary-sm {
+        background: var(--primary);
+        color: white;
+    }
+
+        .btn-primary-sm:hover {
+            background: var(--primary-light);
+            transform: translateY(-1px);
+            color: white;
+        }
+
+    .btn-outline-sm {
+        background: white;
+        color: var(--text-dark);
+        border: 1.5px solid var(--border);
+    }
+
+        .btn-outline-sm:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+    /* Social Links - Minimal */
+    .social-links {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .social-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        border: 1.5px solid var(--border);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .social-icon:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+    /* Bio Section */
+    .section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 1rem;
+    }
+
+    .bio-text {
+        color: var(--text-muted);
+        line-height: 1.618;
+        font-size: 0.938rem;
+    }
+
+    /* Skills - Simple Tags */
+    .skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .skill-tag {
+        padding: 0.375rem 0.875rem;
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 0.813rem;
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    /* Course Card - Clean & Minimal */
+    .courses-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .course-count {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .course-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.2s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .course-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+        }
+
+    .course-image {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+    }
+
+    .course-body {
+        padding: 1.25rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .course-category {
+        font-size: 0.75rem;
+        color: var(--primary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .course-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .course-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.813rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .course-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .course-price {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .course-link {
+        padding: 0.5rem 1rem;
+        background: var(--bg-light);
+        border-radius: 6px;
+        font-size: 0.813rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+        .course-link:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+    .level-badge {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        padding: 0.25rem 0.625rem;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(8px);
+        color: white;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    @@media (max-width: 768px) {
+        .stats {
+            gap: 1.5rem;
+        }
+
+        .btn-group-custom {
+            flex-direction: column;
+        }
+
+        .btn-sm-custom {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="profile-wrapper">
+    <!-- Avatar & Info Section -->
+    <div class="avatar-section">
+        @if (!string.IsNullOrEmpty(Model.Instructor.Avatar))
+        {
+            @* SỬA 1: Thêm thư mục 'avatars/' vào đường dẫn để khớp với Layout *@
+            <img src="~/uploads/avatars/@Model.Instructor.Avatar"
+                 class="avatar"
+                 alt="@Model.Instructor.FullName"
+                 onerror="this.onerror=null;this.src='/images/default-avatar.png';" />
+        }
+        else
+        {
+            <div class="avatar-placeholder">
+                @(Model.Instructor.FullName?.Substring(0, 1).ToUpper() ?? "U")
+            </div>
+        }
+
+        <h1 class="instructor-name">@Model.Instructor.FullName</h1>
+
+        <div class="instructor-badge">
+            <i class="bi bi-patch-check-fill text-primary"></i>
+            Giảng viên uy tín
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number">@Model.Courses.Count</div>
+                <div class="stat-label">Khóa học</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">@Model.TotalStudents.ToString("N0")</div>
+                <div class="stat-label">Học viên</div>
+            </div>
+        </div>
+
+        @{
+            // Lấy ID người đang xem
+            var currentUserId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            // So sánh: Người xem có phải là chủ hồ sơ này không?
+            bool isMe = (currentUserId == Model.Instructor.UserId.ToString());
+        }
+
+        <div class="btn-group-custom">
+            @if (isMe)
+            {
+                <button type="button" class="btn-sm-custom btn-primary-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    <i class="bi bi-pencil-square"></i> Chỉnh sửa hồ sơ
+                </button>
+            }
+           
+        </div>
+
+     
+    </div>
+
+    <!-- Bio Section -->
+    <div class="section">
+        <h2 class="section-title">Giới thiệu</h2>
+        <div class="bio-text">
+            @if (!string.IsNullOrEmpty(Model.Instructor.Bio))
+            {
+                @Html.Raw(Model.Instructor.Bio.Replace("\n", "<br/>"))
+            }
+            else
+            {
+                <p>Giảng viên chưa cập nhật thông tin giới thiệu.</p>
+            }
+        </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="skills">
+        <span class="skill-tag">Web Development</span>
+        <span class="skill-tag">C# Programming</span>
+        <span class="skill-tag">Database Design</span>
+    </div>
+
+    <!-- Courses Section -->
+    <div class="courses-header">
+        <h2 class="section-title" style="margin-bottom: 0;">Khóa học</h2>
+        <span class="course-count">@Model.Courses.Count khóa học</span>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var course in Model.Courses)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="course-card">
+                    <div style="position: relative;">
+                        <img src="~/uploads/@course.Thumbnail" class="course-image" alt="@course.CourseName">
+                        <span class="level-badge">@course.Level</span>
+                    </div>
+                    <div class="course-body">
+                        <div class="course-category">@course.Category.CategoryName</div>
+                        <h3 class="course-title">@course.CourseName</h3>
+
+                        <div class="course-meta">
+                            <span><i class="bi bi-people"></i> @course.EnrollmentCount</span>
+                            <span><i class="bi bi-star-fill" style="color: #fbbf24;"></i> 4.9</span>
+                        </div>
+
+                        <div class="course-footer">
+                            <span class="course-price">@course.Price.ToString("N0")₫</span>
+                            <a href="@Url.Action("Details", "Courses", new { id = course.CourseId })" class="course-link">
+                                Xem thêm
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light border-0">
+                <h5 class="modal-title fw-bold">Chỉnh sửa hồ sơ cá nhân</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <form id="editProfileForm" enctype="multipart/form-data">
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <img id="avatarPreview"
+                                 src="~/uploads/avatars/@(Model.Instructor.Avatar ?? "default-avatar.png")"
+                                 class="rounded-circle border border-3 border-white shadow-sm"
+                                 style="width: 100px; height: 100px; object-fit: cover;"
+                                 onerror="this.src='/images/default-avatar.png'">
+
+                            <label for="avatarUpload" class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2 shadow-sm" style="cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-camera-fill" style="font-size: 0.8rem;"></i>
+                            </label>
+                            <input type="file" id="avatarUpload" name="AvatarFile" class="d-none" accept="image/*">
+                        </div>
+                        <div class="small text-muted mt-2">Nhấn vào icon máy ảnh để thay đổi</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Họ và tên</label>
+                        <input type="text" class="form-control" name="FullName" value="@Model.Instructor.FullName" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Giới thiệu bản thân</label>
+                        <textarea class="form-control" name="Bio" rows="5" placeholder="Chia sẻ kinh nghiệm và đam mê của bạn...">@Model.Instructor.Bio</textarea>
+                        <div class="form-text small">Hỗ trợ xuống dòng.</div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-light text-muted fw-bold" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" id="btnSaveProfile" class="btn btn-primary fw-bold px-4">
+                    <i class="bi bi-check-lg me-1"></i> Lưu thay đổi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // 1. Xử lý xem trước ảnh khi chọn file (Preview Image)
+            $("#avatarUpload").change(function() {
+                const file = this.files[0];
+                if (file) {
+                    let reader = new FileReader();
+                    reader.onload = function(event) {
+                        $('#avatarPreview').attr('src', event.target.result);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 2. Xử lý nút Lưu (Gửi AJAX)
+            $("#btnSaveProfile").click(function() {
+                // Hiệu ứng Loading nút
+                var btn = $(this);
+                var originalText = btn.html();
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang lưu...');
+
+                // Lấy dữ liệu form (bao gồm cả file)
+                var formData = new FormData($('#editProfileForm')[0]);
+
+                $.ajax({
+                    url: '@Url.Action("UpdateProfileAjax", "Instructor")',
+                    type: 'POST',
+                    data: formData,
+                    processData: false, // Bắt buộc false để gửi file
+                    contentType: false, // Bắt buộc false để gửi file
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thành công!',
+                                text: response.message,
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                location.reload(); // Load lại trang để cập nhật thông tin mới
+                            });
+                        } else {
+                            Swal.fire('Lỗi', response.message, 'error');
+                            btn.prop('disabled', false).html(originalText);
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Lỗi', 'Có lỗi xảy ra khi kết nối server.', 'error');
+                        btn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+        });
+    </script>
+}

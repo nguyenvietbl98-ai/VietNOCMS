@@ -1,0 +1,678 @@
+﻿@{
+    ViewBag.Title = "Trang chủ - VietN OCMS";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #0ea5e9;
+            --accent-color: #f59e0b;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --bg-light: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            padding: 1rem 0;
+        }
+
+            .navbar.scrolled {
+                box-shadow: 0 2px 30px rgba(0, 0, 0, 0.1);
+            }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-link {
+            color: var(--text-dark);
+            font-weight: 500;
+            margin: 0 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+            .nav-link:hover {
+                color: var(--primary-color);
+            }
+
+        .btn-login {
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+            .btn-login:hover {
+                background: var(--primary-color);
+                color: white;
+            }
+
+        .btn-register {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+            .btn-register:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+            }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 120px 0 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .hero-section::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,117.3C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+                background-size: cover;
+                background-position: bottom;
+            }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+        }
+
+        .btn-cta {
+            background: var(--accent-color);
+            color: white;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+        }
+
+            .btn-cta:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 40px rgba(245, 158, 11, 0.4);
+                background: #ea580c;
+            }
+
+        /* Featured Courses */
+        .featured-courses {
+            padding: 80px 0;
+            background: var(--bg-light);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+            .section-title::after {
+                content: '';
+                display: block;
+                width: 80px;
+                height: 4px;
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                margin: 1rem auto 0;
+                border-radius: 2px;
+            }
+
+        .course-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            height: 100%;
+        }
+
+            .course-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            }
+
+        .course-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .course-body {
+            padding: 1.5rem;
+        }
+
+        .course-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-dark);
+        }
+
+        .course-instructor {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .course-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .btn-view-course {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+            .btn-view-course:hover {
+                background: var(--secondary-color);
+            }
+
+        /* Features Section */
+        .features-section {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+            .feature-item:hover {
+                transform: translateY(-5px);
+            }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-description {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* Testimonials */
+        .testimonials-section {
+            padding: 80px 0;
+            background: var(--bg-light);
+        }
+
+        .testimonial-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            height: 100%;
+        }
+
+        .testimonial-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            margin-bottom: 1rem;
+        }
+
+        .testimonial-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .testimonial-role {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .testimonial-content {
+            color: var(--text-dark);
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .stars {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: white;
+            padding: 60px 0 30px;
+        }
+
+        .footer-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+
+            .footer-links li {
+                margin-bottom: 0.75rem;
+            }
+
+            .footer-links a {
+                color: rgba(255, 255, 255, 0.7);
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+
+                .footer-links a:hover {
+                    color: white;
+                }
+
+        .social-links a {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            margin-right: 0.5rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+            .social-links a:hover {
+                background: var(--primary-color);
+                transform: translateY(-3px);
+            }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-description {
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="@Url.Action("Index", "Home")">
+                <i class="bi bi-mortarboard-fill"></i> VietN OCMS
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="@Url.Action("Index", "Home")">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Index", "Courses")">Khóa học</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Index", "Instructors")">Giảng viên</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Contact", "Home")">Liên hệ</a>
+                    </li>
+                </ul>
+                <div class="d-flex gap-2">
+                    <a href="@Url.Action("Login", "Account")" class="btn btn-login">Đăng nhập</a>
+                    <a href="@Url.Action("Register", "Account")" class="btn btn-register">Đăng ký</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <h1 class="hero-title">Học trực tuyến dễ dàng với VietN OCMS</h1>
+                    <p class="hero-description">Khám phá hàng trăm khóa học trực tuyến từ các giảng viên chất lượng. Nâng cao kỹ năng và phát triển sự nghiệp của bạn ngay hôm nay!</p>
+                    <a href="@Url.Action("Index", "Courses")" class="btn btn-cta">
+                        Khám phá khóa học <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Courses -->
+    <section class="featured-courses">
+        <div class="container">
+            <h2 class="section-title">Khóa học nổi bật</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="course-card">
+                        <div class="course-image"></div>
+                        <div class="course-body">
+                            <h3 class="course-title">Lập trình Web với ASP.NET Core</h3>
+                            <p class="course-instructor">
+                                <i class="bi bi-person-fill"></i> Nguyễn Văn A
+                            </p>
+                            <div class="course-price">1.999.000đ</div>
+                            <a href="@Url.Action("Details", "Courses", new { id = 1 })" class="btn btn-view-course">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="course-card">
+                        <div class="course-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                        <div class="course-body">
+                            <h3 class="course-title">Thiết kế UI/UX chuyên nghiệp</h3>
+                            <p class="course-instructor">
+                                <i class="bi bi-person-fill"></i> Trần Thị B
+                            </p>
+                            <div class="course-price">1.499.000đ</div>
+                            <a href="@Url.Action("Details", "Courses", new { id = 2 })" class="btn btn-view-course">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="course-card">
+                        <div class="course-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                        <div class="course-body">
+                            <h3 class="course-title">Digital Marketing từ A-Z</h3>
+                            <p class="course-instructor">
+                                <i class="bi bi-person-fill"></i> Lê Văn C
+                            </p>
+                            <div class="course-price">1.799.000đ</div>
+                            <a href="@Url.Action("Details", "Courses", new { id = 3 })" class="btn btn-view-course">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title">Tại sao chọn VietN OCMS?</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-clock-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Học mọi lúc mọi nơi</h3>
+                        <p class="feature-description">Truy cập khóa học 24/7 trên mọi thiết bị, học theo lịch trình linh hoạt của bạn</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-award-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Giảng viên chất lượng</h3>
+                        <p class="feature-description">Học từ các chuyên gia hàng đầu với kinh nghiệm thực tế phong phú</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <h3 class="feature-title">Theo dõi tiến độ</h3>
+                        <p class="feature-description">Quản lý quá trình học tập với dashboard trực quan và báo cáo chi tiết</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Chứng chỉ hoàn thành</h3>
+                        <p class="feature-description">Nhận chứng chỉ được công nhận sau khi hoàn thành khóa học</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials-section">
+        <div class="container">
+            <h2 class="section-title">Học viên nói gì về chúng tôi</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar"></div>
+                        <div class="stars">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <h4 class="testimonial-name">Phạm Minh D</h4>
+                        <p class="testimonial-role">Sinh viên IT</p>
+                        <p class="testimonial-content">"Khóa học ASP.NET rất chi tiết và dễ hiểu. Giảng viên nhiệt tình, hỗ trợ tốt. Sau khóa học, mình đã tự tin apply vào các công ty công nghệ."</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                        <div class="stars">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <h4 class="testimonial-name">Hoàng Thị E</h4>
+                        <p class="testimonial-role">Designer</p>
+                        <p class="testimonial-content">"Nền tảng học tập rất tiện lợi, giao diện đẹp và dễ sử dụng. Khóa UI/UX giúp mình nâng cao kỹ năng thiết kế rất nhiều. Highly recommended!"</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                        <div class="stars">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <h4 class="testimonial-name">Đỗ Văn F</h4>
+                        <p class="testimonial-role">Marketing Manager</p>
+                        <p class="testimonial-content">"Khóa Digital Marketing cung cấp kiến thức thực chiến cực kỳ hữu ích. Áp dụng ngay vào công việc và thấy hiệu quả rõ rệt. Cảm ơn VietN OCMS!"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h3 class="footer-title">
+                        <i class="bi bi-mortarboard-fill"></i> VietN OCMS
+                    </h3>
+                    <p style="color: rgba(255, 255, 255, 0.7);">
+                        Nền tảng học trực tuyến hàng đầu Việt Nam, mang đến trải nghiệm học tập chất lượng cao cho mọi người.
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#"><i class="bi bi-facebook"></i></a>
+                        <a href="#"><i class="bi bi-youtube"></i></a>
+                        <a href="#"><i class="bi bi-linkedin"></i></a>
+                        <a href="#"><i class="bi bi-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3 class="footer-title">Liên kết nhanh</h3>
+                    <ul class="footer-links">
+                        <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                        <li><a href="@Url.Action("Index", "Courses")">Khóa học</a></li>
+                        <li><a href="@Url.Action("Index", "Instructors")">Giảng viên</a></li>
+                        <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                        <li><a href="@Url.Action("About", "Home")">Về chúng tôi</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3 class="footer-title">Liên hệ</h3>
+                    <ul class="footer-links">
+                        <li><i class="bi bi-geo-alt-fill"></i> Thái Nguyên, Việt Nam</li>
+                        <li><i class="bi bi-envelope-fill"></i> contact@vietnocms.edu.vn</li>
+                        <li><i class="bi bi-telephone-fill"></i> (+84) 123 456 789</li>
+                        <li><i class="bi bi-clock-fill"></i> T2 - T7: 8:00 - 18:00</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 VietN OCMS. All rights reserved. | Designed with <i class="bi bi-heart-fill" style="color: #f43f5e;"></i> by VietN Team</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

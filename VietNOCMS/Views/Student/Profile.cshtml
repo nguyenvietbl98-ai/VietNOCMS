@@ -1,0 +1,237 @@
+﻿@model VietNOCMS.ViewModels.StudentProfileViewModel
+@{
+    ViewData["Title"] = "Hồ sơ học tập";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm text-center p-4">
+                <div class="position-relative d-inline-block mx-auto mb-3">
+                    <img src="@(!string.IsNullOrEmpty(Model.Student.Avatar) ? "/uploads/avatars/" + Model.Student.Avatar : "/img/default-avatar.png")"
+                         class="rounded-circle shadow-sm" width="120" height="120" style="object-fit:cover; border: 4px solid white;"
+                         onerror="this.src='/img/default-avatar.png'">
+
+                    <button class="btn btn-sm btn-light position-absolute bottom-0 end-0 rounded-circle border"
+                            data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </div>
+                <h4 class="fw-bold mb-1">@Model.Student.FullName</h4>
+                <p class="text-muted small mb-3">@Model.Student.Email</p>
+
+                <div class="d-flex justify-content-center gap-2 mb-4">
+                    <span class="badge bg-primary bg-opacity-10 text-primary">Học viên</span>
+                    <span class="badge bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-lightning-fill"></i> Tích cực
+                    </span>
+                </div>
+
+                <hr class="opacity-10">
+
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h5 class="fw-bold mb-0">@Model.TotalCoursesEnrolled</h5>
+                        <small class="text-muted" style="font-size: 0.75rem;">Khóa học</small>
+                    </div>
+                    <div class="col-4 border-start border-end">
+                        <h5 class="fw-bold mb-0 text-success">@Model.CompletedCourses</h5>
+                        <small class="text-muted" style="font-size: 0.75rem;">Hoàn thành</small>
+                    </div>
+                    <div class="col-4">
+                        <h5 class="fw-bold mb-0 text-info">@Model.AverageProgress%</h5>
+                        <small class="text-muted" style="font-size: 0.75rem;">Tiến độ TB</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mt-3 p-4">
+                <h6 class="fw-bold">Giới thiệu</h6>
+                <p class="text-muted small mb-0">
+                    @(string.IsNullOrEmpty(Model.Student.Bio) ? "Chưa có thông tin giới thiệu." : Model.Student.Bio)
+                </p>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <h4 class="fw-bold mb-4">Khóa học của tôi</h4>
+
+            @if (Model.EnrolledCourses.Any())
+            {
+                <div class="row g-3">
+                    @foreach (var item in Model.EnrolledCourses)
+                    {
+                        <div class="col-md-12">
+                            <div class="card border-0 shadow-sm hover-effect h-100">
+                                <div class="card-body d-flex align-items-center gap-3">
+                                    <img src="@(!string.IsNullOrEmpty(item.Course.Thumbnail) ? "/uploads/" + item.Course.Thumbnail : "/img/default-course.jpg")"
+                                         class="rounded" width="100" height="70" style="object-fit:cover"
+                                         onerror="this.src='/img/default-course.jpg'">
+
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold mb-1">
+                                            <a href="/Courses/Details/@item.CourseId" class="text-decoration-none text-dark">
+                                                @item.Course.CourseName
+                                            </a>
+                                        </h6>
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="badge bg-light text-secondary border">@item.Course.Category?.CategoryName</span>
+                                            <small class="text-muted">Ngày đăng ký: @item.EnrollmentAt.ToString("dd/MM/yyyy")</small>
+                                        </div>
+
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 6px;">
+                                                <div class="progress-bar bg-success" role="progressbar"
+                                                     style="width: @item.ProgressPersent%"></div>
+                                            </div>
+                                            <span class="small fw-bold text-success">@item.ProgressPersent%</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <a href="/Courses/Learn?id=@item.CourseId" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-play-fill"></i> Học tiếp
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5 bg-light rounded">
+                    <i class="bi bi-journal-bookmark fs-1 text-muted opacity-50"></i>
+                    <p class="mt-3 text-muted">Bạn chưa đăng ký khóa học nào.</p>
+                    <a href="/Courses" class="btn btn-outline-primary">Khám phá ngay</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("_EditProfileModal", new VietNOCMS.ViewModels.InstructorEditProfileViewModel {
+FullName = Model.Student.FullName,
+    Bio = Model.Student.Bio,
+    CurrentAvatar = Model.Student.Avatar // <--- Thêm dòng này
+})
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            let compressedFile = null;
+
+            // Hàm nén ảnh client-side
+            function compressImage(file, maxWidth, maxHeight, quality) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = event => {
+                        const img = new Image();
+                        img.src = event.target.result;
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+
+                            if (width > height) {
+                                if (width > maxWidth) {
+                                    height = Math.round(height * (maxWidth / width));
+                                    width = maxWidth;
+                                }
+                            } else {
+                                if (height > maxHeight) {
+                                    width = Math.round(width * (maxHeight / height));
+                                    height = maxHeight;
+                                }
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            canvas.toBlob(blob => {
+                                const newFile = new File([blob], file.name, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now()
+                                });
+                                resolve(newFile);
+                            }, 'image/jpeg', quality);
+                        };
+                        img.onerror = error => reject(error);
+                    };
+                    reader.onerror = error => reject(error);
+                });
+            }
+
+            // 1. Xử lý khi chọn file (Preview & Nén)
+            $("#avatarUpload").change(async function() {
+                const file = this.files[0];
+                if (file) {
+                    if (!file.type.startsWith('image/')) {
+                        Swal.fire('Lỗi', 'Vui lòng chọn file ảnh!', 'error');
+                        return;
+                    }
+
+                    try {
+                        $('#avatarPreview').css('opacity', '0.5'); // Hiệu ứng đang xử lý
+
+                        // Nén ảnh xuống tối đa 500x500px, chất lượng 80%
+                        compressedFile = await compressImage(file, 500, 500, 0.8);
+
+                        // Hiển thị ảnh preview
+                        const previewUrl = URL.createObjectURL(compressedFile);
+                        $('#avatarPreview').attr('src', previewUrl).css('opacity', '1');
+                    } catch (e) {
+                        console.error(e);
+                        Swal.fire('Lỗi', 'Không thể xử lý ảnh này.', 'error');
+                    }
+                }
+            });
+
+            // 2. Gửi Ajax cập nhật (Dùng chung API với Instructor)
+            $("#btnSaveProfile").click(function() {
+                var btn = $(this);
+                var originalText = btn.html();
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Đang lưu...');
+
+                var formData = new FormData($('#editProfileForm')[0]);
+
+                // Nếu có file nén thì thay thế file gốc
+                if (compressedFile) {
+                    formData.set('AvatarFile', compressedFile);
+                }
+
+                $.ajax({
+                    url: '/Instructor/UpdateProfileAjax', // API dùng chung cho cả Student/Instructor
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thành công!',
+                                text: res.message,
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi', res.message, 'error');
+                            btn.prop('disabled', false).html(originalText);
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Lỗi', 'Không thể kết nối server.', 'error');
+                        btn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+        });
+    </script>
+}

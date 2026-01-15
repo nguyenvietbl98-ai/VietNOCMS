@@ -1,0 +1,867 @@
+﻿@{
+    ViewData["Title"] = "Trò chuyện";
+    var currentUserId = ViewBag.CurrentUserId;
+}
+
+<div class="container-fluid py-4">
+    <div class="chat-container shadow-lg">
+        <div class="row g-0 h-100">
+
+            <!-- Sidebar: Danh sách hội thoại -->
+            <div class="col-md-4 col-lg-3 chat-sidebar">
+
+                <!-- Header Sidebar -->
+                <div class="sidebar-header">
+                    <h5 class="mb-0 fw-bold text-white">
+                        <i class="bi bi-chat-dots-fill me-2"></i>Tin nhắn
+                    </h5>
+                </div>
+
+                <!-- Search Box -->
+                <div class="search-box">
+                    <div class="search-input-wrapper">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="userSearchInput" class="search-input" placeholder="Tìm kiếm người dùng...">
+                    </div>
+                    <div id="searchResults" class="search-results">
+                    </div>
+                </div>
+
+                <!-- Conversation List -->
+                <div class="conversation-list" id="conversationList">
+                    @if (ViewBag.Conversations != null)
+                    {
+                        foreach (var item in ViewBag.Conversations)
+                        {
+                            <a href="#" class="conversation-item"
+                               data-conv-id="@item.ConversationId"
+                               data-partner-id="@item.Partner.UserId"
+                               onclick="selectConversation(@item.ConversationId, @item.Partner.UserId, '@item.Partner.FullName', '@item.Partner.Avatar')">
+                                <div class="conversation-avatar-wrapper">
+                                    <img src="@(string.IsNullOrEmpty(item.Partner.Avatar) ? "/img/default-avatar.png" : "/uploads/avatars/" + item.Partner.Avatar)"
+                                         class="conversation-avatar" alt="Avatar">
+                                    <span class="online-indicator"></span>
+                                    @if (item.UnreadCount > 0)
+                                    {
+                                        <span class="unread-badge">@item.UnreadCount</span>
+                                    }
+                                </div>
+                                <div class="conversation-content">
+                                    <div class="conversation-header">
+                                        <h6 class="conversation-name">@item.Partner.FullName</h6>
+                                        <span class="conversation-time">@item.LastTime.ToString("HH:mm")</span>
+                                    </div>
+                                    <p class="conversation-preview">@item.LastMessage</p>
+                                </div>
+                            </a>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Main Chat Area -->
+            <div class="col-md-8 col-lg-9 chat-main">
+
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-state-content">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-chat-heart"></i>
+                        </div>
+                        <h4 class="empty-state-title">Chào mừng đến với Chat</h4>
+                        <p class="empty-state-text">Chọn một cuộc trò chuyện hoặc tìm kiếm người dùng để bắt đầu</p>
+                    </div>
+                </div>
+
+                <!-- Chat Interface -->
+                <div id="chatInterface" class="chat-interface d-none">
+
+                    <!-- Chat Header -->
+                    <div class="chat-header">
+                        <div class="chat-header-info">
+                            <img id="headerAvatar" src="/img/default-avatar.png" class="chat-header-avatar" alt="Avatar">
+                            <div class="chat-header-details">
+                                <h6 class="chat-header-name" id="headerName">Tên người dùng</h6>
+                                <span class="chat-header-status">
+                                    <i class="bi bi-circle-fill status-dot"></i> Đang hoạt động
+                                </span>
+                            </div>
+                        </div>
+                      
+                    </div>
+
+                    <!-- Message Area -->
+                    <div id="messageArea" class="message-area">
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="input-area">
+                        
+                        <div class="input-wrapper">
+                            <input type="text" id="msgInput" class="message-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+                        </div>
+                        <button class="btn-send" onclick="sendMessage()">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --chat-primary: #667eea;
+            --chat-secondary: #764ba2;
+            --message-sent: #0084ff;
+            --message-received: #ffffff;
+            --sidebar-bg: #ffffff;
+            --main-bg: #f0f2f5;
+            --border-color: #e4e6eb;
+            --text-primary: #050505;
+            --text-secondary: #65676b;
+            --hover-bg: #f2f3f5;
+            --active-bg: #e7f3ff;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Chat Container */
+        .chat-container {
+            height: 85vh;
+            min-height: 600px;
+            max-height: 900px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: white;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Sidebar */
+        .chat-sidebar {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            background: var(--sidebar-bg);
+            height: 100%;
+        }
+
+        .sidebar-header {
+            background: var(--primary-gradient);
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Search Box */
+        .search-box {
+            padding: 1rem 1rem 0.75rem;
+            background: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border: none;
+            border-radius: 24px;
+            background: var(--main-bg);
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+            .search-input:focus {
+                outline: none;
+                background: #e4e6eb;
+            }
+
+        .search-results {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            left: 1rem;
+            right: 1rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+            .search-results .list-group-item {
+                border: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 0.875rem 1rem;
+                transition: var(--transition);
+            }
+
+                .search-results .list-group-item:hover {
+                    background: var(--hover-bg);
+                }
+
+                .search-results .list-group-item:last-child {
+                    border-bottom: none;
+                }
+
+        /* Conversation List */
+        .conversation-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem 0;
+        }
+
+            .conversation-list::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .conversation-list::-webkit-scrollbar-thumb {
+                background: #d0d3d7;
+                border-radius: 3px;
+            }
+
+                .conversation-list::-webkit-scrollbar-thumb:hover {
+                    background: #b8bbbe;
+                }
+
+        .conversation-item {
+            display: flex;
+            align-items: center;
+            padding: 0.875rem 1rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+            gap: 0.875rem;
+        }
+
+            .conversation-item:hover {
+                background: var(--hover-bg);
+            }
+
+            .conversation-item.active-chat {
+                background: var(--active-bg);
+                border-left-color: var(--chat-primary);
+            }
+
+        .conversation-avatar-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .conversation-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+
+        .online-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background: #31a24c;
+            border: 2px solid white;
+            border-radius: 50%;
+        }
+
+        .unread-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 20px;
+            height: 20px;
+            background: #e41e3f;
+            color: white;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            border: 2px solid white;
+        }
+
+        .conversation-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .conversation-name {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            margin-left: 0.5rem;
+        }
+
+        .conversation-preview {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Chat Main */
+        .chat-main {
+            display: flex;
+            flex-direction: column;
+            background: var(--main-bg);
+            height: 100%;
+            position: relative;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: var(--main-bg);
+        }
+
+        .empty-state-content {
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .empty-state-icon {
+            font-size: 5rem;
+            color: #d0d3d7;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .empty-state-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Chat Interface */
+        .chat-interface {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+        }
+
+        .chat-header-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chat-header-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header-name {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chat-header-status {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .status-dot {
+            font-size: 0.5rem;
+            color: #31a24c;
+        }
+
+        .chat-header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            color: var(--chat-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1.1rem;
+        }
+
+            .btn-icon:hover {
+                background: var(--hover-bg);
+            }
+
+        /* Message Area */
+        .message-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+            .message-area::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .message-area::-webkit-scrollbar-thumb {
+                background: #d0d3d7;
+                border-radius: 3px;
+            }
+
+        /* Message Bubbles */
+        .message-bubble {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .message-mine {
+            background: var(--message-sent);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            margin-left: auto;
+        }
+
+        .message-partner {
+            background: var(--message-received);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            margin-top: 0.35rem;
+            opacity: 0.8;
+            text-align: right;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 1rem 1.5rem;
+            background: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-wrapper {
+            flex: 1;
+        }
+
+        .message-input {
+            width: 100%;
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 24px;
+            background: var(--main-bg);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+            .message-input:focus {
+                outline: none;
+                background: #e4e6eb;
+            }
+
+        .btn-send {
+            width: 42px;
+            height: 42px;
+            border: none;
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1.1rem;
+        }
+
+            .btn-send:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            }
+
+            .btn-send:active {
+                transform: scale(0.95);
+            }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .chat-container {
+                height: calc(100vh - 2rem);
+                border-radius: 12px;
+            }
+
+            .chat-sidebar {
+                display: none;
+            }
+
+                .chat-sidebar.show {
+                    display: flex;
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 100;
+                }
+
+            .chat-header-actions {
+                display: none;
+            }
+
+            .message-bubble {
+                max-width: 85%;
+            }
+
+            .conversation-avatar {
+                width: 48px;
+                height: 48px;
+            }
+        }
+
+        /* Animations */
+        @@keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @@keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message-mine {
+            animation: slideInRight 0.3s ease;
+        }
+
+        .message-partner {
+            animation: slideInLeft 0.3s ease;
+        }
+    </style>
+}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+
+@section Scripts {
+    <script>
+      
+        let currentConvId = null;
+        let currentReceiverId = null;
+
+   
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+
+       
+        connection.on("ReceiveMessage", function (senderId, content, time) {
+            @currentUserId 
+            let isMine = (senderId == '@currentUserId');
+            let typeClass = isMine ? 'message-mine' : 'message-partner';
+
+        
+            let html = `
+                <div class="d-flex flex-column ${isMine ? 'align-items-end' : 'align-items-start'}">
+                    <div class="message-bubble ${typeClass}">
+                        ${content}
+                    </div>
+                    <div class="message-time text-muted small mb-2" style="font-size: 0.7rem">
+                        ${time}
+                    </div>
+                </div>`;
+
+            let area = $('#messageArea');
+            area.append(html);
+            area.scrollTop(area[0].scrollHeight);
+        });
+
+      
+        connection.start().then(function () {
+            console.log("SignalR Connected!");
+        }).catch(err => console.error(err));
+
+
+      
+        $('#userSearchInput').on('input', function() {
+            let query = $(this).val();
+            if (query.length < 1) {
+                $('#searchResults').hide();
+                return;
+            }
+
+            $.get('/Chat/SearchUser?query=' + query, function(users) {
+                let html = '';
+                if(users.length === 0) {
+                    html = '<div class="list-group-item text-muted">Không tìm thấy ai</div>';
+                } else {
+                    users.forEach(u => {
+                        let avatar = u.avatar ? `/uploads/avatars/${u.avatar}` : '/img/default-avatar.png';
+                       
+                        html += `
+                            <a href="#" class="list-group-item list-group-item-action"
+                               onclick="startNewChat(${u.userId}, '${u.fullName}', '${avatar}')">
+                               <div class="d-flex align-items-center">
+                                   <img src="${avatar}" width="30" height="30" class="rounded-circle me-2">
+                                   <div>
+                                       <strong>${u.fullName}</strong>
+                                       <div class="small text-muted">${u.email}</div>
+                                   </div>
+                               </div>
+                            </a>`;
+                    });
+                }
+                $('#searchResults').html(html).show();
+            });
+        });
+
+  
+        function selectConversation(convId, partnerId, name, avatar) {
+           
+            if (currentConvId === convId && convId !== 0) return;
+
+     
+            if (currentConvId && currentConvId > 0) {
+                connection.invoke("LeaveConversation", currentConvId.toString())
+                    .catch(err => console.error(err));
+            }
+
+            currentConvId = convId;
+            currentReceiverId = partnerId;
+
+         
+            $('.conversation-item').removeClass('active-chat');
+            $(`[data-conv-id="${convId}"]`).addClass('active-chat');
+
+            openChatUI(name, avatar);
+
+       
+            loadMessages();
+
+           
+            if (convId > 0) {
+                connection.invoke("JoinConversation", convId.toString())
+                    .catch(err => console.error(err));
+            }
+        }
+
+      
+        function startNewChat(userId, name, avatar) {
+          
+            let existingItem = $(`.conversation-item[data-partner-id="${userId}"]`);
+
+            if(existingItem.length > 0) {
+                existingItem.click(); 
+            } else {
+                
+                if (currentConvId && currentConvId > 0) {
+                     connection.invoke("LeaveConversation", currentConvId.toString());
+                }
+
+                currentConvId = 0; 
+                currentReceiverId = userId;
+
+                $('.conversation-item').removeClass('active-chat');
+                openChatUI(name, avatar);
+
+                $('#messageArea').html('<div class="text-center text-muted mt-5"><small>Bắt đầu cuộc trò chuyện mới</small></div>');
+            }
+
+          
+            $('#searchResults').hide();
+            $('#userSearchInput').val('');
+        } 
+
+        function openChatUI(name, avatarPath) {
+            $('#emptyState').addClass('d-none');
+            $('#chatInterface').removeClass('d-none').addClass('d-flex');
+
+            $('#headerName').text(name);
+            let finalAvatar = avatarPath && avatarPath !== 'null'
+                ? (avatarPath.startsWith('/') ? avatarPath : '/uploads/avatars/' + avatarPath)
+                : '/img/default-avatar.png';
+            $('#headerAvatar').attr('src', finalAvatar);
+        }
+
+        function loadMessages() {
+            if (!currentConvId || currentConvId === 0) return;
+
+            $.get('/Chat/GetMessages?conversationId=' + currentConvId, function(res) {
+                if (res.success) {
+                    let html = '';
+                    res.data.forEach(m => {
+                        let typeClass = m.isMine ? 'message-mine' : 'message-partner';
+                        html += `
+                            <div class="d-flex flex-column ${typeClass === 'message-mine' ? 'align-items-end' : 'align-items-start'}">
+                                <div class="message-bubble ${typeClass}">
+                                    ${m.content}
+                                </div>
+                                <div class="message-time text-muted small mb-2" style="font-size: 0.7rem">
+                                    ${m.sentAt}
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    let area = $('#messageArea');
+                    area.html(html);
+                    area.scrollTop(area[0].scrollHeight);
+                }
+            });
+        }
+
+        
+        function sendMessage() {
+            let content = $('#msgInput').val().trim();
+            if (!content) return;
+
+            $('#msgInput').val('');
+
+            $.post('/Chat/SendMessage', {
+                conversationId: currentConvId,
+                receiverId: currentReceiverId,
+                content: content
+            }, function(res) {
+                if (res.success) {
+                   
+                    if (res.conversationId && (!currentConvId || currentConvId === 0)) {
+                        currentConvId = res.conversationId;
+                    
+                        connection.invoke("JoinConversation", currentConvId.toString());
+                    }
+                 
+                } else {
+                    alert('Lỗi gửi tin: ' + (res.message || 'Không xác định'));
+                }
+            });
+        }
+
+   
+        $('#msgInput').keypress(function(e) {
+            if(e.which == 13) sendMessage();
+        });
+
+      
+        $(document).click(function(e) {
+            if (!$(e.target).closest('#userSearchInput, #searchResults').length) {
+                $('#searchResults').hide();
+            }
+        });
+
+     
+        $(document).ready(function() {
+             var targetId = '@ViewBag.TargetUserId';
+             if (targetId) {
+                 var userElement = $(`.conversation-item[data-partner-id="${targetId}"]`);
+                 if (userElement.length > 0) {
+                     userElement.click();
+                     var container = $('#conversationList');
+                     if(container.length > 0) {
+                          container.animate({
+                              scrollTop: userElement.offset().top - container.offset().top + container.scrollTop()
+                         }, 500);
+                     }
+                 }
+             }
+         });
+    </script>
+}

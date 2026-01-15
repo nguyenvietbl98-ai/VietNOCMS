@@ -1,0 +1,991 @@
+﻿@model VietNOCMS.Models.StudentAnalyticsViewModel
+
+@{
+    ViewData["Title"] = "Phân tích học tập";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Mảng màu dùng chung cho Biểu đồ và Chú thích (Legend)
+    string[] chartColors = new string[] { "#2563eb", "#0ea5e9", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6" };
+}
+
+@section Styles {
+    <style>
+
+        .analytics-container {
+            padding: 2rem 0;
+            background: var(--bg-light);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .page-header::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -10%;
+                width: 400px;
+                height: 400px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+            }
+
+            .page-header h1 {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+                position: relative;
+                z-index: 2;
+            }
+
+            .page-header p {
+                font-size: 1.1rem;
+                opacity: 0.9;
+                position: relative;
+                z-index: 2;
+            }
+
+        /* Stats Cards */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 4px;
+                height: 100%;
+                background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .stat-card.success .stat-icon {
+            background: linear-gradient(135deg, var(--success-color), #34d399);
+        }
+
+        .stat-card.warning .stat-icon {
+            background: linear-gradient(135deg, var(--warning-color), #fbbf24);
+        }
+
+        .stat-card.info .stat-icon {
+            background: linear-gradient(135deg, var(--info-color), var(--secondary-color));
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .stat-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+            .stat-trend.up {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .stat-trend.down {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+
+        /* Chart Cards */
+        .chart-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+            .chart-card:hover {
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+            .chart-title i {
+                font-size: 1.75rem;
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+        .chart-filter {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+            .filter-btn:hover {
+                border-color: var(--primary-color);
+                color: var(--primary-color);
+            }
+
+            .filter-btn.active {
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                color: white;
+                border-color: transparent;
+            }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 1rem;
+        }
+
+            .chart-container.small {
+                height: 280px;
+            }
+
+        /* Grid Layout */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 2rem;
+        }
+
+        .grid-full {
+            grid-column: span 12;
+        }
+
+        .grid-8 {
+            grid-column: span 8;
+        }
+
+        .grid-4 {
+            grid-column: span 4;
+        }
+
+        /* Legend Custom */
+        .custom-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        /* Progress Items */
+        .progress-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+            .progress-item:hover {
+                background: #e0e7ff;
+                transform: translateX(5px);
+            }
+
+        .progress-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+            .progress-icon.fast {
+                background: linear-gradient(135deg, #10b981, #34d399);
+                color: white;
+            }
+
+            .progress-icon.normal {
+                background: linear-gradient(135deg, #3b82f6, #60a5fa);
+                color: white;
+            }
+
+            .progress-icon.slow {
+                background: linear-gradient(135deg, #f59e0b, #fbbf24);
+                color: white;
+            }
+
+        .progress-content {
+            flex: 1;
+        }
+
+        .progress-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .progress-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .progress-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Insights Section */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .insight-card::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -20%;
+                width: 200px;
+                height: 200px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+            }
+
+            .insight-card.success {
+                background: linear-gradient(135deg, #059669, #10b981);
+            }
+
+            .insight-card.warning {
+                background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            }
+
+        .insight-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .insight-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-description {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        /* Responsive */
+        @@media (max-width: 1200px) {
+            .grid-8, .grid-4 {
+                grid-column: span 12;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .chart-filter {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .filter-btn {
+                flex: 1;
+                text-align: center;
+            }
+        }
+ 
+        .analytics-container {
+            padding: 2rem 0;
+            background: var(--bg-light);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .page-header::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -10%;
+                width: 400px;
+                height: 400px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+            }
+
+            .page-header h1 {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+                position: relative;
+                z-index: 2;
+            }
+
+            .page-header p {
+                font-size: 1.1rem;
+                opacity: 0.9;
+                position: relative;
+                z-index: 2;
+            }
+
+        /* Stats Cards */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 4px;
+                height: 100%;
+                background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .stat-card.success .stat-icon {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .stat-card.warning .stat-icon {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        }
+
+        .stat-card.info .stat-icon {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .stat-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+            .stat-trend.up {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+        /* Chart Cards */
+        .chart-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+            .chart-title i {
+                font-size: 1.75rem;
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+        .chart-filter {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+            .filter-btn.active {
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                color: white;
+                border-color: transparent;
+            }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 1rem;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 2rem;
+        }
+
+        .grid-full {
+            grid-column: span 12;
+        }
+
+        .grid-8 {
+            grid-column: span 8;
+        }
+
+        .grid-4 {
+            grid-column: span 4;
+        }
+
+        /* Custom Legend */
+        .custom-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        /* Insights */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .insight-card::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -20%;
+                width: 200px;
+                height: 200px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+            }
+
+            .insight-card.success {
+                background: linear-gradient(135deg, #10b981, #059669);
+            }
+
+            .insight-card.warning {
+                background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            }
+
+        .insight-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .insight-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-description {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        /* Responsive */
+        @@media (max-width: 1200px) {
+            .grid-8, .grid-4 {
+                grid-column: span 12;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .chart-filter {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .filter-btn {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+}
+
+<div class="analytics-container">
+    <div class="container">
+        <div class="page-header">
+            <div class="container">
+                <h1><i class="bi bi-graph-up-arrow"></i> Phân tích học tập</h1>
+                <p>Theo dõi tiến độ và hiệu suất học tập của bạn</p>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-value">@Model.TotalStudyHours <small style="font-size: 1rem; font-weight: 500;">giờ</small></div>
+                <div class="stat-label">Tổng thời gian học</div>
+                <span class="stat-trend up">
+                    <i class="bi bi-arrow-up"></i> Tích lũy
+                </span>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-value">@Model.CompletedLessons <small style="font-size: 1rem; font-weight: 500;">bài</small></div>
+                <div class="stat-label">Bài học hoàn thành</div>
+                <span class="stat-trend up">
+                    <i class="bi bi-check-all"></i> Đã xong
+                </span>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="bi bi-lightning"></i>
+                </div>
+                <div class="stat-value">@Model.CompletionRate%</div>
+                <div class="stat-label">Tiến độ tổng thể</div>
+                <span class="stat-trend up">
+                    <i class="bi bi-graph-up"></i> Trung bình
+                </span>
+            </div>
+
+            <div class="stat-card info">
+                <div class="stat-icon">
+                    <i class="bi bi-trophy"></i>
+                </div>
+                <div class="stat-value">@Model.CurrentStreak <small style="font-size: 1rem; font-weight: 500;">ngày</small></div>
+                <div class="stat-label">Chuỗi học liên tiếp</div>
+                @if (Model.CurrentStreak > 0)
+                {
+                    <span class="stat-trend up">
+                        <i class="bi bi-fire"></i> Đang cháy!
+                    </span>
+                }
+                else
+                {
+                    <span class="stat-trend" style="background: #f1f5f9; color: #64748b;">
+                        <i class="bi bi-pause"></i> Đã dừng
+                    </span>
+                }
+            </div>
+        </div>
+
+        <div class="analytics-grid">
+            <div class="grid-full">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="bi bi-calendar-week"></i>
+                            Biểu đồ thời gian học (7 ngày qua)
+                        </h3>
+                        <div class="chart-filter">
+                            <button class="filter-btn active">7 ngày</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-8">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="bi bi-pie-chart"></i>
+                            Phân bổ kiến thức
+                        </h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+
+                    <div class="custom-legend">
+                        @if (Model.CategoryLabels.Any())
+                        {
+                            @for (int i = 0; i < Model.CategoryLabels.Count; i++)
+                            {
+                                var color = chartColors[i % chartColors.Length];
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background: @color;"></div>
+                                    <span>@Model.CategoryLabels[i] (@Model.CategoryData[i])</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-muted">Chưa có dữ liệu khóa học.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-4">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="bi bi-speedometer2"></i>
+                            Ghi chú
+                        </h3>
+                    </div>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="alert alert-light border-0 shadow-sm">
+                            <strong><i class="bi bi-info-circle text-primary"></i> Tương tác:</strong>
+                            <p class="mb-0 small text-muted">Bạn thường học vào buổi tối. Hãy duy trì thói quen này!</p>
+                        </div>
+                        <div class="alert alert-light border-0 shadow-sm">
+                            <strong><i class="bi bi-bar-chart text-success"></i> Hiệu suất:</strong>
+                            <p class="mb-0 small text-muted">Bạn hoàn thành trung bình @(Model.TotalStudyHours > 0 ? (Model.CompletedLessons / Model.TotalStudyHours).ToString("0.0") : "0") bài học mỗi giờ.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="insights-grid">
+            <div class="insight-card">
+                <i class="insight-icon bi bi-lightbulb"></i>
+                <h4 class="insight-title">Mẹo học tập</h4>
+                <p class="insight-description">
+                    @Model.StudyTip
+                </p>
+            </div>
+
+            @if (Model.HasAchievement)
+            {
+                <div class="insight-card success">
+                    <i class="insight-icon bi bi-star"></i>
+                    <h4 class="insight-title">Thành tích nổi bật</h4>
+                    <p class="insight-description">
+                        Tuyệt vời! Bạn đã duy trì chuỗi học tập liên tiếp. Hãy tiếp tục phát huy để nhận huy hiệu nhé!
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="insight-card warning">
+                    <i class="insight-icon bi bi-exclamation-triangle"></i>
+                    <h4 class="insight-title">Cần chú ý</h4>
+                    <p class="insight-description">
+                        Đừng để gián đoạn quá lâu. Hãy dành ít nhất 15 phút mỗi ngày để duy trì thói quen học tập.
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Màu sắc từ Server (để đồng bộ với Legend)
+        const colors = @Html.Raw(Json.Serialize(chartColors));
+
+        // 1. Time Chart - Bar Chart (Dữ liệu thật)
+        const timeCtx = document.getElementById('timeChart').getContext('2d');
+        const timeChart = new Chart(timeCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.ChartLabels)),
+                datasets: [{
+                    label: 'Thời gian học (giờ)',
+                    data: @Html.Raw(Json.Serialize(Model.ChartValues)),
+                    backgroundColor: function(context) {
+                        const gradient = context.chart.ctx.createLinearGradient(0, 0, 0, 400);
+                        gradient.addColorStop(0, '#2563eb');
+                        gradient.addColorStop(1, '#0ea5e9');
+                        return gradient;
+                    },
+                    borderRadius: 10,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + ' giờ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#e2e8f0', drawBorder: false },
+                        ticks: { callback: function(value) { return value + 'h'; } }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false }
+                    }
+                }
+            }
+        });
+
+        // 2. Category Chart - Doughnut Chart (Dữ liệu thật)
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryChart = new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.CategoryLabels)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(Model.CategoryData)),
+                    backgroundColor: colors, // Dùng mảng màu đã định nghĩa
+                    borderWidth: 0,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }, // Tắt legend mặc định để dùng custom HTML
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    </script>
+}

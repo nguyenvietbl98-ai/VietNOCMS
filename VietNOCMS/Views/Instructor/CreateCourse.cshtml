@@ -1,0 +1,882 @@
+﻿@model CreateCourseViewModel
+
+@{
+    ViewData["Title"] = "Tạo khóa học mới - Giảng viên";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem 0;
+            margin-top: -25px;
+            color: white;
+        }
+
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+            .form-section-title i {
+                color: #059669;
+            }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+            .form-label .required {
+                color: var(--danger-color);
+            }
+
+        .form-control,
+        .form-select {
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+            .form-control:focus,
+            .form-select:focus {
+                border-color: #059669;
+                box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+            }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .image-upload-area {
+            border: 3px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-light);
+        }
+
+            .image-upload-area:hover {
+                border-color: #059669;
+                background: rgba(5, 150, 105, 0.05);
+            }
+
+            .image-upload-area.dragover {
+                border-color: #059669;
+                background: rgba(5, 150, 105, 0.1);
+            }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+            .image-preview.show {
+                display: block;
+            }
+
+        .price-input-group {
+            position: relative;
+        }
+
+        .price-currency {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .form-text {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .course-type-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .course-type-card {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .course-type-card:hover {
+                border-color: #059669;
+                background: rgba(5, 150, 105, 0.05);
+            }
+
+            .course-type-card input[type="radio"] {
+                display: none;
+            }
+
+                .course-type-card input[type="radio"]:checked + .card-content {
+                    color: #059669;
+                }
+
+                .course-type-card input[type="radio"]:checked ~ .card-content {
+                    border-color: #059669;
+                }
+
+            .course-type-card.selected {
+                border-color: #059669;
+                background: rgba(5, 150, 105, 0.1);
+            }
+
+        .course-type-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .course-type-title {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .course-type-desc {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .level-badges {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .level-badge {
+            flex: 1;
+            min-width: 150px;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .level-badge:hover {
+                border-color: #059669;
+            }
+
+            .level-badge input[type="radio"] {
+                display: none;
+            }
+
+            .level-badge.selected {
+                border-color: #059669;
+                background: rgba(5, 150, 105, 0.1);
+                color: #059669;
+                font-weight: 700;
+            }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        .btn-draft {
+            background: var(--text-light);
+            color: white;
+        }
+
+            .btn-draft:hover {
+                background: #475569;
+            }
+
+        .progress-indicator {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+            .progress-step::before {
+                content: '';
+                position: absolute;
+                top: 15px;
+                left: 50%;
+                right: -50%;
+                height: 2px;
+                background: var(--border-color);
+                z-index: 0;
+            }
+
+            .progress-step:last-child::before {
+                display: none;
+            }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .progress-step.active .step-number {
+            background: #059669;
+            color: white;
+            border-color: #059669;
+        }
+
+        .progress-step.completed .step-number {
+            background: #059669;
+            color: white;
+            border-color: #059669;
+        }
+
+        .progress-step.completed::before {
+            background: #059669;
+        }
+
+        .step-label {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            color: var(--text-light);
+        }
+
+        .progress-step.active .step-label {
+            color: #059669;
+            font-weight: 600;
+        }
+
+        @@media (max-width: 768px) {
+            .form-card {
+                padding: 1.5rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .progress-steps {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .progress-step::before {
+                display: none;
+            }
+        }
+    </style>}
+
+<div class="page-header">
+    <div class="container">
+        <h1 class="text-center mb-2"><i class="bi bi-plus-circle"></i> Tạo khóa học mới</h1>
+        <p class="text-center mb-0 opacity-75">Chia sẻ kiến thức và kinh nghiệm của bạn với học viên</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="form-container">
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div class="progress-steps">
+                <div class="progress-step active">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Thông tin cơ bản</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Thêm nội dung</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Xuất bản</div>
+                </div>
+            </div>
+        </div>
+
+        @{
+            var formAction = (Model.CourseId.HasValue && Model.CourseId > 0) ? "EditCourse" : "CreateCourse";
+        }
+
+        <form asp-action="@formAction" asp-controller="Instructor" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            @if (Model.CourseId.HasValue)
+            {
+                <input type="hidden" asp-for="CourseId" />
+                <input type="hidden" asp-for="CurrentThumbnail" />
+            }
+          
+
+            <!-- Basic Information -->
+            <div class="form-card">
+                <h2 class="form-section-title">
+                    <i class="bi bi-info-circle"></i>
+                    Thông tin cơ bản
+                </h2>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Tên khóa học <span class="required">*</span>
+                    </label>
+                    <input asp-for="CourseName" class="form-control"  />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Mô tả ngắn <span class="required">*</span>
+                    </label>
+                    <textarea asp-for="ShortDescription" class="form-control" ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Mô tả chi tiết
+                    </label>
+                    <textarea asp-for="DetailedDescription" class="form-control" style="min-height:200px;" ></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">
+                                Danh mục <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="CategoryId" class="form-select" id="categorySelect" onchange="toggleNewCategoryInput()">
+                                <option value="">-- Chọn danh mục --</option>
+
+                                @foreach (var cat in Model.Categories)
+                                {
+                                    <option value="@cat.CategoryId">@cat.CategoryName</option>
+                                }
+
+                                <option value="-1" class="fw-bold text-primary">+ Tạo chủ đề mới...</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3" id="newCategoryGroup" style="display: none;">
+                            <label asp-for="NewCategoryName" class="form-label fw-bold text-primary">
+                                Nhập tên chủ đề mới
+                            </label>
+                            <input asp-for="NewCategoryName" class="form-control border-primary"  />
+                            <span asp-validation-for="NewCategoryName" class="text-danger"></span>
+                        </div>
+
+                        <script>
+                            function toggleNewCategoryInput() {
+                                var selectBox = document.getElementById("categorySelect");
+                                var inputGroup = document.getElementById("newCategoryGroup");
+                                var inputField = document.getElementById("NewCategoryName");
+
+                                // Nếu chọn giá trị -1 (Tạo mới)
+                                if (selectBox.value == "-1") {
+                                    inputGroup.style.display = "block"; // Hiện ô nhập
+                                    if(inputField) inputField.focus();  // Focus vào ô nhập
+                                } else {
+                                    inputGroup.style.display = "none";  // Ẩn ô nhập
+                                    if(inputField) inputField.value = ""; // Xóa chữ đã nhập nếu đổi ý
+                                }
+                            }
+
+                            // Kích hoạt 1 lần khi tải trang (để giữ trạng thái nếu form bị lỗi validate trả về)
+                            document.addEventListener("DOMContentLoaded", function() {
+                                toggleNewCategoryInput();
+                            });
+                        </script>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Cấp độ <span class="required">*</span>
+                            </label>
+                            <div class="level-badges">
+                                @foreach(var level in new[] { "Beginner", "Intermediate", "Advanced" })
+                                {
+                                    <label class="level-badge @(Model.Level==level?"selected":"")">
+                                        <input type="radio" asp-for="Level" value="@level" />
+                                        <div>
+                                            @level
+                                        </div>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Image -->
+            <div class="form-card">
+                <h2 class="form-section-title">
+                    <i class="bi bi-image"></i>
+                    Hình ảnh khóa học
+                </h2>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Ảnh đại diện <span class="required">*</span>
+                    </label>
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <i class="bi bi-cloud-upload upload-icon"></i>
+                        <h4>Kéo thả ảnh vào đây hoặc nhấp để chọn</h4>
+                        <p class="text-muted">Định dạng: JPG, PNG | Kích thước khuyến nghị: 1280x720px</p>
+                        <input asp-for="CourseImage" id="courseImage" type="file" accept="image/*" style="display:none;" />
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.CourseImage?.FileName))
+                    {
+                        <img id="imagePreview" class="image-preview show" src="@Url.Content("~/uploads/"+Model.CourseImage.FileName)" />
+                    }
+                    else
+                    {
+                        <img id="imagePreview" class="image-preview" alt="Preview">
+                    }
+                </div>
+            </div>
+
+            <!-- Pricing -->
+            <div class="form-card">
+                <h2 class="form-section-title">
+                    <i class="bi bi-cash-coin"></i>
+                    Giá và loại khóa học
+                </h2>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Loại khóa học <span class="required">*</span>
+                    </label>
+                    <div class="course-type-options">
+                        <label class="course-type-card @(Model.CourseType=="Free"?"selected":"")">
+                            <input type="radio" asp-for="CourseType" value="Free" />
+                            <div class="card-content">
+                                <div class="course-type-icon">🎁</div>
+                                <div class="course-type-title">Miễn phí</div>
+                                <div class="course-type-desc">Khóa học hoàn toàn miễn phí</div>
+                            </div>
+                        </label>
+                        <label class="course-type-card @(Model.CourseType=="Paid"?"selected":"")">
+                            <input type="radio" asp-for="CourseType" value="Paid" />
+                            <div class="card-content">
+                                <div class="course-type-icon">💰</div>
+                                <div class="course-type-title">Có phí</div>
+                                <div class="course-type-desc">Học viên trả phí để truy cập</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="priceGroup" style="display:@(Model.CourseType=="Paid"?"block":"none");">
+                    <label class="form-label">
+                        Giá khóa học (VNĐ) <span class="required">*</span>
+                    </label>
+                    <div class="price-input-group">
+                        <input asp-for="Price" type="number" class="form-control" min="0" step="1000" />
+                        <span class="price-currency">VNĐ</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Giá khuyến mãi (Tùy chọn)</label>
+                    <div class="price-input-group">
+                        <input asp-for="DiscountPrice" type="number" class="form-control" min="0" step="1000"/>
+                        <span class="price-currency">VNĐ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Info -->
+            <div class="form-card">
+                <h2 class="form-section-title">
+                    <i class="bi bi-gear"></i>
+                    Thông tin bổ sung
+                </h2>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Thời lượng ước tính (giờ)</label>
+                            <input asp-for="EstimatedDuration" type="number" class="form-control" min="1" step="0.5" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Ngôn ngữ</label>
+                            <select name="Language" class="form-select">
+                                <option value="Tiếng Việt" selected>Tiếng Việt</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Yêu cầu trước khi học</label>
+                    <textarea asp-for="Requirements" class="form-control"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Học viên sẽ học được gì</label>
+                    <textarea asp-for="WhatYouWillLearn" class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="card mt-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Đội ngũ giảng dạy</h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#teamModal">
+                        <i class="bi bi-person-plus"></i> Quản lý & Mời
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Giảng viên</th>
+                                    <th>Email</th>
+                                    <th>Vai trò</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardTeamBody">
+                                <tr><td colspan="4" class="text-center text-muted">Bấm "Quản lý" để xem chi tiết</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="teamModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">Quản lý Đội ngũ Giảng dạy</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+
+                            <div class="card bg-light border-0 mb-4">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Mời giảng viên / trợ giảng mới</h6>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <input type="email" id="inviteEmail" class="form-control" placeholder="Nhập email người dùng...">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select id="inviteRole" class="form-select">
+                                                <option value="Assistant">Trợ giảng (Chỉ chấm bài)</option>
+                                                <option value="Substitute">Dạy thay (Sửa nội dung + Chấm bài)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" onclick="addCollaborator()" class="btn btn-primary w-100">
+                                                <i class="bi bi-plus-lg"></i> Mời
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <ul class="nav nav-tabs mb-3" id="teamTab" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#members-tab">
+                                        Thành viên chính thức
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#requests-tab">
+                                        Yêu cầu tham gia
+                                        <span class="badge bg-danger rounded-pill" id="requestCountBadge" style="display:none">0</span>
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content">
+
+                                <div class="tab-pane fade show active" id="members-tab">
+                                    <div class="table-responsive">
+                                        <table class="table align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Thành viên</th>
+                                                    <th>Vai trò</th>
+                                                    <th>Trạng thái</th>
+                                                    <th class="text-end">Hành động</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="teamListBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="requests-tab">
+                                    <div class="table-responsive">
+                                        <table class="table align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Ứng viên</th>
+                                                    <th>Lời nhắn</th>
+                                                    <th>Ngày gửi</th>
+                                                    <th class="text-end">Hành động</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="requestListBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="@Url.Action("MyCourses","Instructor")" class="btn btn-outline-custom">
+                    <i class="bi bi-arrow-left"></i> Hủy
+                </a>
+                <div class="d-flex gap-2">
+                    <button type="submit" name="action" value="draft" class="btn btn-draft">
+                        <i class="bi bi-file-earmark"></i> Lưu nháp
+                    </button>
+                    <button type="submit" name="action" href="Instructor/AddContent" value="next" class="btn btn-primary-custom">
+                        Tiếp theo: Thêm nội dung <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Image upload
+        const uploadArea = document.getElementById('imageUploadArea');
+        const imageInput = document.getElementById('courseImage');
+        const imagePreview = document.getElementById('imagePreview');
+
+        uploadArea.addEventListener('click', () => imageInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                imageInput.files = files;
+                previewImage(files[0]);
+            }
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                previewImage(e.target.files[0]);
+            }
+        });
+
+        function previewImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                imagePreview.classList.add('show');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Course type selection
+        document.querySelectorAll('.course-type-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.course-type-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                this.querySelector('input[type="radio"]').checked = true;
+
+                const priceGroup = document.getElementById('priceGroup');
+                if (this.querySelector('input').value === 'Paid') {
+                    priceGroup.style.display = 'block';
+                    priceGroup.querySelector('input').required = true;
+                } else {
+                    priceGroup.style.display = 'none';
+                    priceGroup.querySelector('input').required = false;
+                }
+            });
+        });
+
+        // Level selection
+        document.querySelectorAll('.level-badge').forEach(badge => {
+            badge.addEventListener('click', function() {
+                document.querySelectorAll('.level-badge').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+            
+
+        var currentCourseId = @(Model.CourseId ?? 0);// Lấy ID khóa học từ Model
+
+        // 1. Hàm load danh sách khi mở trang
+              $(document).ready(function() {
+            if(currentCourseId > 0) {
+                loadTeamList(); // Gọi đúng tên hàm
+            }
+        });
+
+               // Hàm load danh sách Team (Phiên bản mới)
+        function loadTeamList() {
+           $.get('/Instructor/GetCourseTeam?courseId=' + currentCourseId, function(res) {
+                if(res.success) {
+                    let memberHtml = '';
+                    let requestHtml = '';
+
+                    res.data.forEach(m => {
+                        // Render từng dòng
+                        let row = `
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="${m.avatar ? '/uploads/avatars/'+m.avatar : '/img/default-avatar.png'}"
+                                         class="rounded-circle me-2" width="32" height="32">
+                                    <div>
+                                        <div class="fw-bold">${m.fullName}</div>
+                                        <small class="text-muted">${m.email}</small>
+                                    </div>
+                                </div>
+                                ${m.message ? `<small class="text-info d-block mt-1"><i class="bi bi-chat-quote"></i> ${m.message}</small>` : ''}
+                            </td>
+                            <td><span class="badge bg-secondary">${m.role}</span></td>
+                            <td>
+                                ${getStatusBadge(m.status)}
+                            </td>
+                            <td class="text-end">
+                                ${getActionButtons(m)}
+                            </td>
+                        </tr>`;
+
+                        // Phân loại vào 2 bảng khác nhau
+                        if(m.status === 'Pending_Approval') {
+                            requestHtml += row;
+                        } else {
+                            memberHtml += row;
+                        }
+                    });
+
+                    // Nếu không có dữ liệu thì hiện thông báo trống
+                    if(!memberHtml) memberHtml = '<tr><td colspan="4" class="text-center text-muted">Chưa có thành viên nào.</td></tr>';
+                    if(!requestHtml) requestHtml = '<tr><td colspan="4" class="text-center text-muted">Không có yêu cầu ứng tuyển nào.</td></tr>';
+
+                    // Inject vào HTML (Bạn cần tạo 2 cái tbody có id tương ứng trong HTML)
+                    $('#teamListBody').html(memberHtml);       // Bảng thành viên
+                    $('#requestListBody').html(requestHtml);   // Bảng yêu cầu ứng tuyển (MỚI)
+                }
+            });
+        }
+
+        // Hàm phụ trợ tạo Badge màu sắc
+        function getStatusBadge(status) {
+            if(status === 'Accepted') return '<span class="badge bg-success">Đã tham gia</span>';
+            if(status === 'Pending_Invite') return '<span class="badge bg-warning text-dark">Chờ hồi âm</span>';
+            if(status === 'Pending_Approval') return '<span class="badge bg-info text-dark">Chờ bạn duyệt</span>';
+            return `<span class="badge bg-secondary">${status}</span>`;
+        }
+
+        // Hàm phụ trợ tạo Nút bấm
+        function getActionButtons(m) {
+            // Nếu là người đang xin duyệt -> Hiện nút Duyệt / Từ chối
+            if(m.status === 'Pending_Approval') {
+                return `
+                    <button onclick="reviewApp(${m.id}, 'Approve')" class="btn btn-sm btn-success" title="Duyệt"><i class="bi bi-check-lg"></i></button>
+                    <button onclick="reviewApp(${m.id}, 'Reject')" class="btn btn-sm btn-danger" title="Từ chối"><i class="bi bi-x-lg"></i></button>
+                `;
+            }
+            // Nếu là thành viên đã vào hoặc mình mời -> Hiện nút Xóa/Hủy mời
+            return `
+                <button class="btn btn-sm btn-outline-danger" onclick="removeMember(${m.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+        }
+
+        // Hàm xử lý Duyệt đơn
+        function reviewApp(id, action) {
+            $.post('/Collaborator/ReviewApplication', { id: id, action: action }, function(res) {
+                if(res.success) {
+                    loadTeamList(); // Reload lại bảng
+                    Swal.fire('Thành công', 'Đã xử lý hồ sơ', 'success');
+                } else {
+                    Swal.fire('Lỗi', res.message, 'error');
+                }
+            });
+        }
+    </script>
+}

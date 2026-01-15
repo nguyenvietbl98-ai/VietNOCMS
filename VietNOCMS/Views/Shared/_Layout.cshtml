@@ -1,0 +1,613 @@
+﻿@{
+    var userAvatar = Context.Session.GetString("UserAvatar");
+}
+@using VietNOCMS.Data
+@inject ApplicationDbContext _context
+@using System.Security.Claims
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - VietN OCMS</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <style>
+        /* Navbar Container - Flexbox Layout */
+        body {
+            padding-top: 80px; /* Chiều cao này phải lớn hơn chiều cao của Navbar */
+        <a class="dropdown-item" href="/Account/Profile">
+                                    <i b-qy4022ehx9="" class="bi bi-person-circle"></i> Trang cá nhân
+                                </a>
+        .navbar .container-fluid {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Brand ở bên trái */
+        .navbar-brand {
+            margin-right: auto;
+            z-index: 1001;
+        }
+
+        /* Navbar items ở chính giữa */
+        .navbar-collapse .navbar-nav.me-auto {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            margin: 0 !important;
+        }
+
+        /* User menu ở bên phải */
+        .navbar-collapse > .dropdown {
+            margin-left: auto;
+        }
+
+        /* Mobile - Responsive */
+        @@media (max-width: 991.98px) {
+            .navbar-collapse .navbar-nav.me-auto {
+                position: relative;
+                left: auto;
+                transform: none;
+            }
+
+            .navbar-collapse > .dropdown {
+                margin-left: 0;
+            }
+        }
+    </style>
+    <style>
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: white;
+            padding: 60px 0 30px;
+        }
+
+        .footer-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+
+            .footer-links li {
+                margin-bottom: 0.75rem;
+            }
+
+            .footer-links a {
+                color: rgba(255, 255, 255, 0.7);
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+
+                .footer-links a:hover {
+                    color: white;
+                }
+
+        .social-links a {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            margin-right: 0.5rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+            .social-links a:hover {
+                background: var(--primary-color);
+                transform: translateY(-3px);
+            }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+    </style>
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" asp-controller="Home" asp-action="@(User.Identity.IsAuthenticated ? "Index" : "Index")">
+                <i class="bi bi-mortarboard-fill"></i>
+                <span>VietN OCMS</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+                                   asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-people"></i> Người dùng
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><h6 class="dropdown-header">Quản lý</h6></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Admin" asp-action="ManageUsers">
+                                            <i class="bi bi-person-lines-fill"></i> Danh sách người dùng
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Admin" asp-action="InstructorRequests">
+                                            <i class="bi bi-person-check"></i> Duyệt giảng viên
+                                            <span class="badge bg-warning ms-2">12</span>
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Admin" asp-action="CreateUser">
+                                            <i class="bi bi-person-plus"></i> Thêm người dùng
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-book"></i> Khóa học
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><h6 class="dropdown-header">Quản lý</h6></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Admin" asp-action="ManageCourses">
+                                            <i class="bi bi-list-ul"></i> Tất cả khóa học
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Admin" asp-action="ManageCategories">
+                                            <i class="bi bi-tags"></i> Quản lý danh mục
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Admin" asp-action="PendingCourses">
+                                            <i class="bi bi-clock-history"></i> Khóa học chờ duyệt
+                                            <span class="badge bg-warning ms-2">5</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-graph-up"></i> Báo cáo
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Admin" asp-action="Statistics">
+                                            <i class="bi bi-bar-chart"></i> Thống kê tổng quan
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Admin" asp-action="RevenueReport">
+                                            <i class="bi bi-cash-coin"></i> Báo cáo doanh thu
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Admin" asp-action="UserActivity">
+                                            <i class="bi bi-activity"></i> Hoạt động người dùng
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link notification-badge" asp-controller="Admin" asp-action="Notifications">
+                                    <i class="bi bi-bell"></i> Thông báo
+                                    <span class="badge">3</span>
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                    else if (User.IsInRole("Instructor"))
+                    {
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+                                   asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-book"></i> Khóa học
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><h6 class="dropdown-header">Quản lý khóa học</h6></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Instructor" asp-action="MyCourses">
+                                            <i class="bi bi-list-ul"></i> Khóa học của tôi
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Instructor" asp-action="CreateCourse">
+                                            <i class="bi bi-plus-circle"></i> Tạo khóa học mới
+                                        </a>
+                                    </li>
+                                      
+                                  
+                                </ul>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-people"></i> Học viên
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Instructor" asp-action="Students">
+                                            <i class="bi bi-person-lines-fill"></i> Danh sách học viên
+                                        </a>
+                                    </li>
+                                  
+
+                                    <li>
+                                    <a class="nav-link d-flex align-items-center" asp-controller="Instructor" asp-action="ManageEnrollments">
+            <i class="bi bi-person-check-fill me-1 text-warning"></i>
+            <span>Duyệt học viên</span>
+           
+            <span class="badge rounded-pill bg-danger ms-1" id="pendingCount"></span>
+        </a> </li>
+                                </ul>
+                            </li>
+                          
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Instructor" asp-action="TeachingSchedule">
+                                    <i class="bi bi-calendar-check"></i> Lịch dạy
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Chat" asp-action="Index">
+                                    <i class="bi bi-chat-dots-fill text-primary"></i> Tin nhắn
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Instructor" asp-action="Analytics">
+                                    <i class="bi-bar-chart-line"></i>Hiệu quả giảng dạy
+                                </a>
+
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Recruitment" asp-action="Index">
+                                    <i class="bi bi-briefcase-fill text-warning"></i> Tuyển dụng
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")"
+                                   asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-house"></i> Trang chủ
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-book"></i> Khóa học
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><h6 class="dropdown-header">Học tập</h6></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Student" asp-action="MyCourses">
+                                            <i class="bi bi-journal-bookmark"></i> Khóa học của tôi
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Student" asp-action="ExploreCourse">
+                                            <i class="bi bi-search"></i> Khám phá khóa học
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Gradebook" asp-action="MyGrades">
+                                            <i class="bi bi-card-checklist me-2"></i> Tra cứu điểm
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Student" asp-action="Continue">
+                                            <i class="bi bi-play-circle"></i> Tiếp tục học
+                                        </a>
+                                            @{
+
+    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+    
+    bool isCollaborator = _context.CourseCollaborators
+        .Any(cc => cc.CollaboratorId == userId && cc.Status == "Accepted");
+}
+
+@if (isCollaborator)
+{
+    <li class="nav-item">
+                                            <a class="dropdown-item" asp-controller="Instructor" asp-action="MyCourses">
+            <i class="bi bi-briefcase-fill"></i> Quản lý đào tạo
+        </a>
+    </li>
+}
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+
+
+                                
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Student" asp-action="Analytics">
+                                    <i class="bi bi-graph-up"></i> Phân tích học tập
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Student" asp-action="Schedule">
+                                    <i class="bi bi-calendar-check"></i> Lịch học
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Chat" asp-action="Index">
+                                    <i class="bi bi-chat-dots-fill text-primary"></i> Tin nhắn
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Recruitment" asp-action="Index">
+                                    <i class="bi bi-briefcase-fill text-warning"></i> Tuyển dụng
+                                </a>
+                            </li>
+                        
+                        </ul>
+                    }
+                  
+                    <div class="dropdown">
+
+                        <a class="nav-link dropdown-toggle user-menu-trigger" href="#" role="button" data-bs-toggle="dropdown">
+                            <div class="user-avatar @(User.IsInRole("Admin") ? "admin" : User.IsInRole("Instructor") ? "instructor" : "student")">
+                                @if (!string.IsNullOrEmpty(userAvatar))
+                                {
+                                    <img src="~/uploads/avatars/@userAvatar" alt="Avatar"
+                                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                }
+                                else
+                                {
+                                    @(User.Identity.Name?.Substring(0, 1).ToUpper() ?? "U")
+                                }
+                            </div>
+
+                            <div class="user-info d-none d-lg-block">
+                                <div class="user-name">@User.Identity.Name</div>
+                                <div class="user-role">
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <text>Quản trị viên</text>
+                                    }
+                                    else if (User.IsInRole("Instructor"))
+                                    {
+                                        <text>Giảng viên</text>
+                                    }
+                                    else
+                                    {
+                                        <text>Học viên</text>
+                                    }
+                                </div>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                            <li>
+                                @if (User.IsInRole("Instructor"))
+                                {
+                                    <a class="dropdown-item"
+                                       asp-controller="Instructor"
+                                       asp-action="Profile"
+                                       asp-route-id="@User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier)">
+                                        <i class="bi bi-person-circle"></i> Trang cá nhân
+                                    </a>
+                                }
+                                else if (User.IsInRole("Student"))
+                                {
+                                    <a class="dropdown-item"
+                                       asp-controller="Student"
+                                       asp-action="Profile">
+                                        <i class="bi bi-person-circle"></i> Hồ sơ học tập
+                                    </a>
+                                }
+                                else if (User.IsInRole("Admin"))
+                                {
+                                    <a class="dropdown-item" asp-controller="Home" asp-action="Index">
+                                        <i class="bi bi-person-circle"></i> Trang cá nhân
+                                    </a>
+                                }
+                            </li>
+                                </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">
+                                    <i class="bi bi-key"></i> Đổi mật khẩu
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Account" asp-action="Setting">
+                                    <i class="bi bi-gear"></i> Cài đặt
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" asp-controller="Account" asp-action="Logout">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+
+
+                    </div>
+                    @using Microsoft.AspNetCore.Http
+                @inject IHttpContextAccessor HttpContextAccessor
+
+                    <div class="d-flex align-items-center me-3">
+                        <a href="@Url.Action("Index", "Wallet")"
+                           class="nav-link d-flex align-items-center bg-light px-3 py-1 rounded-pill border"
+                           style="text-decoration: none; transition: all 0.3s; height: 38px;">
+                            <i class="bi bi-wallet2 text-primary me-2" style="font-size: 1.1rem;"></i>
+                            <div class="d-flex flex-column justify-content-center" style="line-height: 1.1;">
+                                <span style="font-size: 0.65rem; color: #6c757d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Số dư</span>
+                                <span class="fw-bold text-dark" style="font-size: 0.9rem;">
+                                    @* Lấy số dư từ Session, nếu chưa có thì hiện 0 *@
+                                    @(HttpContextAccessor.HttpContext.Session.GetString("UserBalance") ?? "0")₫
+                                </span>
+                            </div>
+                            <i class="bi bi-plus-circle-fill text-success ms-2" style="font-size: 0.9rem;" title="Nạp tiền"></i>
+                        </a>
+                    </div>
+
+                }
+                else
+                {
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house"></i> Trang chủ
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Courses" asp-action="Index">
+                                <i class="bi bi-book"></i> Khóa học
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Instructors" asp-action="Index">
+                                <i class="bi bi-people"></i> Giảng viên
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Contact">
+                                <i class="bi bi-envelope"></i> Liên hệ
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex gap-2">
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-login">
+                            <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                        </a>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-register">
+                            <i class="bi bi-person-plus"></i> Đăng ký
+                        </a>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </nav>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h3 class="footer-title">
+                        <i class="bi bi-mortarboard-fill"></i> VietN OCMS
+                    </h3>
+                    <p style="color: rgba(255, 255, 255, 0.7);">
+                        Nền tảng học trực tuyến hàng đầu Việt Nam, mang đến trải nghiệm học tập chất lượng cao cho mọi người.
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#"><i class="bi bi-facebook"></i></a>
+                        <a href="#"><i class="bi bi-youtube"></i></a>
+                        <a href="#"><i class="bi bi-linkedin"></i></a>
+                        <a href="#"><i class="bi bi-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3 class="footer-title">Liên kết nhanh</h3>
+                    <ul class="footer-links">
+                        <li><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                        <li><a href="@Url.Action("Index", "Courses")">Khóa học</a></li>
+                        <li><a href="@Url.Action("Index", "Instructors")">Giảng viên</a></li>
+                        <li><a href="@Url.Action("Contact", "Home")">Liên hệ</a></li>
+                        <li><a href="@Url.Action("About", "Home")">Về chúng tôi</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3 class="footer-title">Liên hệ</h3>
+                    <ul class="footer-links">
+                        <li><i class="bi bi-geo-alt-fill"></i> Thái Nguyên, Việt Nam</li>
+                        <li><i class="bi bi-envelope-fill"></i> contact@vietnocms.edu.vn</li>
+                        <li><i class="bi bi-telephone-fill"></i> (+84) 123 456 789</li>
+                        <li><i class="bi bi-clock-fill"></i> T2 - T7: 8:00 - 18:00</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 VietN OCMS. All rights reserved. | Designed with <i class="bi bi-heart-fill" style="color: #f43f5e;"></i> by VietN Team</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Active nav link highlight
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
