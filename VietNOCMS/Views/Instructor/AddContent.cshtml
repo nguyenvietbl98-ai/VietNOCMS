@@ -367,19 +367,19 @@ function calculateDuration() {
     }
 }
 
-    // --- LƯU DATA ---
+  
    function saveLesson() {
     const title = document.getElementById('lessonTitle').value;
     if(!title) { Swal.fire('Lỗi', 'Nhập tên bài học', 'warning'); return; }
 
     const videoType = document.querySelector('input[name="videoType"]:checked').value;
     
-    // --- MAP LOẠI BÀI HỌC VỀ CHUẨN ---
-    let finalLessonType = "Video"; // Mặc định là Video
+  
+    let finalLessonType = "Video"; 
     if (videoType === 'meeting') {
         finalLessonType = "Meeting";
     }
-    // ----------------------------------
+  
 
     if (videoType === 'meeting') {
         const startStr = document.getElementById('lessonStartTime').value;
@@ -410,9 +410,8 @@ function calculateDuration() {
     
     formData.append('videoType', videoType);
     
-    // --- GỬI LOẠI BÀI HỌC CHUẨN ---
     formData.append('lessonType', finalLessonType); 
-    // ------------------------------
+   
 
     if (videoType === 'upload') {
         const f = document.getElementById('videoFile').files[0];
@@ -437,7 +436,7 @@ function calculateDuration() {
     else formData.append('chapterId', currentChapterId);
 
     Swal.fire({ title: 'Đang xử lý...', didOpen: () => Swal.showLoading() });
-
+    //AJAX
     $.ajax({
         url: url, type: 'POST',
         headers: { "RequestVerificationToken": csrfToken },
@@ -453,7 +452,7 @@ function calculateDuration() {
     });
 }
         
-        // --- CÁC HÀM PHỤ ---
+       
         function addSection() {
             Swal.fire({ title: 'Tên chương', input: 'text', showCancelButton: true }).then((r) => {
                 if(r.isConfirmed && r.value) {
@@ -466,7 +465,7 @@ function calculateDuration() {
             });
         }
 
-      // Thay thế function deleteSection cũ bằng đoạn này:
+   
 
 function deleteSection(id) {
     Swal.fire({
@@ -517,9 +516,7 @@ function deleteSection(id) {
         }
     });
 }
-        // ==========================================
-    // HÀM CHỈNH SỬA BÀI HỌC (Đổ dữ liệu vào Modal)
-    // ==========================================
+      
  function editLesson(id, title, duration, isFree, type, videoUrl, meetingLink, startTime, content) {
         // 1. Cập nhật trạng thái để biết là đang Sửa
         isEditing = true;

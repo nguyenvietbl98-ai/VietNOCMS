@@ -12,14 +12,15 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews();
 
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddScoped<ICourseAuthorizationService, CourseAuthorizationService>();
 
 builder.Services.AddDistributedMemoryCache();
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"),
     o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))); 
+
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(2);

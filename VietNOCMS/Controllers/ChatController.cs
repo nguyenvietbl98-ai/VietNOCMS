@@ -43,9 +43,8 @@ namespace VietNOCMS.Controllers
                     LastTime = c.LastMessageAt,
                     UnreadCount = c.Messages.Count(m => m.SenderId != userId && !m.IsRead)
                 })
-                .ToList(); // Lấy dữ liệu về RAM trước
+                .ToList(); 
 
-            // Chuyển sang List<dynamic> để có thể Insert thêm phần tử "giả" (chat mới)
             var conversations = conversationsData.Cast<dynamic>().ToList();
 
             // 3. Xử lý Logic "Nhắn tin từ nút bấm" (Profile -> Chat)

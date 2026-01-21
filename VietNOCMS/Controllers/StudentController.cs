@@ -29,7 +29,7 @@ namespace VietNOCMS.Controllers
             if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
             int studentId = int.Parse(userIdStr);
 
-            // Truy vấn Tối ưu: Chiếu (Select) dữ liệu trực tiếp sang ViewModel chỉ trong 1 lần gọi DB
+          
             var courses = await _context.Enrollments
                 .Where(e => e.StudentId == studentId)
                 .Include(e => e.Course).ThenInclude(c => c.Instructor)
@@ -37,14 +37,14 @@ namespace VietNOCMS.Controllers
                 .OrderByDescending(e => e.EnrollmentAt)
                 .Select(e => new CourseViewModel
                 {
-                    // Lấy thông tin từ bảng Course
+                   
                     CourseId = e.Course.CourseId,
                     CourseName = e.Course.CourseName,
                     Thumbnail = e.Course.Thumbnail,
                     InstructorName = e.Course.Instructor.FullName,
                     CategoryName = e.Course.Category.CategoryName,
 
-                    // Lấy thông tin từ bảng Enrollment (Dữ liệu quan trọng)
+                   
                     Progress = e.ProgressPersent,
                     EnrollmentStatus = e.Status // Các trạng thái: 'Pending', 'Approved', 'Rejected'
                 })
@@ -434,7 +434,7 @@ namespace VietNOCMS.Controllers
 
             return View(viewModel);
         }
-        [Authorize] // Ai đăng nhập rồi cũng xem được, nhưng role Student là chính
+        [Authorize] 
         [HttpGet]
         public async Task<IActionResult> Profile()
         {

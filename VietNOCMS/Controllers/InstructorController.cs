@@ -1490,7 +1490,7 @@ namespace VietNOCMS.Controllers
                 IsRead = false
             };
             _context.Notifications.Add(noti);
-            // Lưu ý: Hàm này chưa gọi SaveChangesAsync() để bạn có thể gọi chung với logic chính
+          
         }
     }
 }
