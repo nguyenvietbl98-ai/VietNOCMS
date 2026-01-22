@@ -759,16 +759,16 @@
         });
             
 
-        var currentCourseId = @(Model.CourseId ?? 0);// Lấy ID khóa học từ Model
+        var currentCourseId = @(Model.CourseId ?? 0);
 
-        // 1. Hàm load danh sách khi mở trang
+   
               $(document).ready(function() {
             if(currentCourseId > 0) {
-                loadTeamList(); // Gọi đúng tên hàm
+                loadTeamList(); 
             }
         });
 
-               // Hàm load danh sách Team (Phiên bản mới)
+             
         function loadTeamList() {
            $.get('/Instructor/GetCourseTeam?courseId=' + currentCourseId, function(res) {
                 if(res.success) {
@@ -776,7 +776,7 @@
                     let requestHtml = '';
 
                     res.data.forEach(m => {
-                        // Render từng dòng
+                      
                         let row = `
                         <tr>
                             <td>
@@ -799,7 +799,7 @@
                             </td>
                         </tr>`;
 
-                        // Phân loại vào 2 bảng khác nhau
+                      
                         if(m.status === 'Pending_Approval') {
                             requestHtml += row;
                         } else {
@@ -807,18 +807,18 @@
                         }
                     });
 
-                    // Nếu không có dữ liệu thì hiện thông báo trống
+                   
                     if(!memberHtml) memberHtml = '<tr><td colspan="4" class="text-center text-muted">Chưa có thành viên nào.</td></tr>';
                     if(!requestHtml) requestHtml = '<tr><td colspan="4" class="text-center text-muted">Không có yêu cầu ứng tuyển nào.</td></tr>';
 
-                    // Inject vào HTML (Bạn cần tạo 2 cái tbody có id tương ứng trong HTML)
-                    $('#teamListBody').html(memberHtml);       // Bảng thành viên
-                    $('#requestListBody').html(requestHtml);   // Bảng yêu cầu ứng tuyển (MỚI)
+                  
+                    $('#teamListBody').html(memberHtml);     
+                    $('#requestListBody').html(requestHtml);   
                 }
             });
         }
 
-        // Hàm phụ trợ tạo Badge màu sắc
+      
         function getStatusBadge(status) {
             if(status === 'Accepted') return '<span class="badge bg-success">Đã tham gia</span>';
             if(status === 'Pending_Invite') return '<span class="badge bg-warning text-dark">Chờ hồi âm</span>';
@@ -826,16 +826,16 @@
             return `<span class="badge bg-secondary">${status}</span>`;
         }
 
-        // Hàm phụ trợ tạo Nút bấm
+     
         function getActionButtons(m) {
-            // Nếu là người đang xin duyệt -> Hiện nút Duyệt / Từ chối
+          
             if(m.status === 'Pending_Approval') {
                 return `
                     <button onclick="reviewApp(${m.id}, 'Approve')" class="btn btn-sm btn-success" title="Duyệt"><i class="bi bi-check-lg"></i></button>
                     <button onclick="reviewApp(${m.id}, 'Reject')" class="btn btn-sm btn-danger" title="Từ chối"><i class="bi bi-x-lg"></i></button>
                 `;
             }
-            // Nếu là thành viên đã vào hoặc mình mời -> Hiện nút Xóa/Hủy mời
+       
             return `
                 <button class="btn btn-sm btn-outline-danger" onclick="removeMember(${m.id})">
                     <i class="bi bi-trash"></i>
@@ -843,7 +843,7 @@
             `;
         }
 
-        // Hàm xử lý Duyệt đơn
+      
         function reviewApp(id, action) {
             $.post('/Collaborator/ReviewApplication', { id: id, action: action }, function(res) {
                 if(res.success) {

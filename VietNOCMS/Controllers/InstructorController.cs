@@ -1274,7 +1274,7 @@ namespace VietNOCMS.Controllers
                 {
                     try
                     {
-                        // Đường dẫn vật lý
+                        
                         string filePath = Path.Combine(_webHostEnvironment.WebRootPath, s.submissionUrl.TrimStart('/'));
                         if (System.IO.File.Exists(filePath))
                         {
@@ -1309,16 +1309,14 @@ namespace VietNOCMS.Controllers
             progress.InstructorFeedback = feedback;
             progress.IsCompleted = true;
 
-            // 3. THÊM MỚI: Tạo thông báo gửi cho học viên
-            // Lấy StudentId từ Enrollment
-            // Lấy LessonName từ Lesson
+           
             await CreateNotification(
                 userId: progress.Enrollment.StudentId,
                 title: "Bài tập đã được chấm",
                 message: $"Bài '{progress.Lesson.LessonName}' đạt {score} điểm. GV nhận xét: {feedback}",
-                type: NotificationType.Success, // Màu xanh lá
-                category: "Grade",              // Icon Huy hiệu/Điểm
-                url: $"/Courses/Details/{progress.Enrollment.CourseId}" // Link về khóa học
+                type: NotificationType.Success, 
+                category: "Grade",             
+                url: $"/Courses/Details/{progress.Enrollment.CourseId}" 
             );
 
             await _context.SaveChangesAsync();
@@ -1431,7 +1429,7 @@ namespace VietNOCMS.Controllers
                     });
                     enrollment.Course.EnrollmentCount += 1;
 
-                    // Gửi thông báo cho học viên khi được duyệt
+                  
                     await CreateNotification(
                         userId: enrollment.StudentId,
                         title: "Đăng ký khóa học được duyệt",
@@ -1458,7 +1456,7 @@ namespace VietNOCMS.Controllers
                         CreatedAt = DateTime.Now
                     });
 
-                    // Gửi thông báo cho học viên khi bị từ chối
+                  
                     await CreateNotification(
                         userId: enrollment.StudentId,
                         title: "Đăng ký khóa học bị từ chối",
@@ -1557,17 +1555,17 @@ namespace VietNOCMS.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteChapter(int id)
         {
-            // 1. Tìm chương và Include luôn các bài học để lấy đường dẫn file cần xóa
+           
             var chapter = await _context.Chapters
                 .Include(c => c.Lessons)
                 .FirstOrDefaultAsync(c => c.ChapterId == id);
 
             if (chapter == null) return Json(new { success = false, message = "Không tìm thấy chương học." });
 
-            // 2. Check quyền (User hiện tại có phải chủ khóa học không)
+          
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            // Lưu ý: Cần check quyền trên CourseId của chương đó
+           
             if (!await _authService.AuthorizeAsync(userId, chapter.CourseId, CoursePermission.ManageContent))
             {
                 return Json(new { success = false, message = "Bạn không có quyền xóa chương này." });
@@ -1575,28 +1573,28 @@ namespace VietNOCMS.Controllers
 
             try
             {
-                // 3. DỌN DẸP FILE RÁC (Video/Docs) của tất cả bài học trong chương
+               
                 foreach (var lesson in chapter.Lessons)
                 {
-                    // Xóa Video
+                   
                     if (!string.IsNullOrEmpty(lesson.VideoUrl) && lesson.VideoUrl.StartsWith("/videos/"))
                     {
                         var path = Path.Combine(_webHostEnvironment.WebRootPath, lesson.VideoUrl.TrimStart('/'));
                         if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
                     }
-                    // Xóa Tài liệu
+                
                     if (!string.IsNullOrEmpty(lesson.DocumentUrl) && lesson.DocumentUrl.StartsWith("/documents/"))
                     {
                         var path = Path.Combine(_webHostEnvironment.WebRootPath, lesson.DocumentUrl.TrimStart('/'));
                         if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
                     }
 
-                    // Xóa LessonProgress (Tiến độ học tập) liên quan để tránh lỗi khóa ngoại
+                   
                     var relatedProgress = _context.LessonProgresses.Where(lp => lp.LessonId == lesson.LessonId);
                     _context.LessonProgresses.RemoveRange(relatedProgress);
                 }
 
-                // 4. Xóa Chương (DB sẽ tự Cascade xóa Lessons, nhưng ta đã xóa file vật lý ở trên)
+             
                 _context.Chapters.Remove(chapter);
                 await _context.SaveChangesAsync();
 
@@ -1607,7 +1605,7 @@ namespace VietNOCMS.Controllers
                 return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
             }
         }
-        // Hàm phụ trợ tạo thông báo nhanh
+      
         private async Task CreateNotification(int userId, string title, string message, NotificationType type, string category, string? url = null)
         {
             var noti = new Notification
@@ -1615,8 +1613,8 @@ namespace VietNOCMS.Controllers
                 UserId = userId,
                 Title = title,
                 Message = message,
-                Type = type,       // Enum: Info, Success, Warning, Error
-                Category = category, // String: "System", "Payment", "Assignment"...
+                Type = type,       
+                Category = category, 
                 RedirectUrl = url,
                 CreatedAt = DateTime.Now,
                 IsRead = false

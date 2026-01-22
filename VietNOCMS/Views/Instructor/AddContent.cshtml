@@ -286,7 +286,7 @@
             new bootstrap.Modal(document.getElementById('addLessonModal')).show();
         }
 
-        // --- MỞ MODAL SỬA ---
+     -
        function editLesson(id, title, duration, isFree, type, startTime, urlOrLink,content) {
     isEditing = true;
     editingLessonId = id;
@@ -297,32 +297,29 @@
     document.getElementById('videoDuration').value = duration;
     document.getElementById('isFreePreview').checked = (isFree === 'True' || isFree === true);
 
-    // Reset loại
+   
     let targetType = 'upload';
     
-    if (type === 'Meeting' || type === 'meeting') { // Check cả chữ hoa thường cho chắc
+    if (type === 'Meeting' || type === 'meeting') { 
         targetType = 'meeting';
         document.getElementById('meetingLink').value = urlOrLink;
         
         if(startTime) {
-            // 1. Điền giờ bắt đầu
+           
             document.getElementById('lessonStartTime').value = startTime;
             
-            // 2. TÍNH TOÁN GIỜ KẾT THÚC TỪ DURATION
-            // startTime có dạng "yyyy-MM-ddTHH:mm"
+          
             let startDate = new Date(startTime);
-            // Cộng thêm số phút duration
+           
             let endDate = new Date(startDate.getTime() + duration * 60000);
             
-            // Format lại thành chuỗi yyyy-MM-ddTHH:mm để gán vào input datetime-local
-            // Lưu ý: Date.toISOString() trả về giờ UTC, cần chỉnh lại theo múi giờ local nếu cần thiết
-            // Cách đơn giản để format local string:
+        
             startDate.setMinutes(startDate.getMinutes() - startDate.getTimezoneOffset());
             endDate.setMinutes(endDate.getMinutes() - endDate.getTimezoneOffset());
             
             document.getElementById('lessonEndTime').value = endDate.toISOString().slice(0,16);
             
-            // Cập nhật text hiển thị
+           
             document.getElementById('durationText').innerText = `Thời lượng: ${duration} phút`;
         }
     } 
@@ -342,22 +339,22 @@
     
     new bootstrap.Modal(document.getElementById('addLessonModal')).show();
 }
-        // Thêm hàm này vào trong thẻ <script>
+      
 function calculateDuration() {
     const startStr = document.getElementById('lessonStartTime').value;
     const endStr = document.getElementById('lessonEndTime').value;
-    const durationInput = document.getElementById('videoDuration'); // Ô input thời lượng gốc
+    const durationInput = document.getElementById('videoDuration'); 
 
     if (startStr && endStr) {
         const start = new Date(startStr);
         const end = new Date(endStr);
         
-        // Tính chênh lệch ra mili giây rồi chia cho 60000 để ra phút
+       
         const diffMs = end - start;
         const diffMins = Math.round(diffMs / 60000);
 
         if (diffMins > 0) {
-            durationInput.value = diffMins; // Cập nhật vào ô thời lượng để gửi đi
+            durationInput.value = diffMins; 
             document.getElementById('durationText').innerText = `Thời lượng: ${diffMins} phút`;
             document.getElementById('durationText').classList.remove('text-danger');
         } else {

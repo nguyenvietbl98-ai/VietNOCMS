@@ -580,11 +580,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // ==========================================
-        // LOGIC CHẤM BÀI TẬP (ĐÃ FIX LỖI CLICK)
-        // ==========================================
+       
         let currentProgressId = 0;
-        let submissionsData = []; // Lưu trữ dữ liệu tạm
+        let submissionsData = []; 
         let currentAssignmentTitle = "";
         let currentAssignmentContent = "";
 
@@ -596,13 +594,13 @@
             $('#submissionListContent').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2">Đang tải danh sách...</p></div>');
 
             $.get('/Instructor/GetSubmissions?lessonId=' + lessonId, function(data) {
-                submissionsData = data; // Lưu vào biến toàn cục để dùng lại
+                submissionsData = data; 
 
                 let html = '';
                 if (data.length === 0) {
                     html = '<div class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1"></i><p>Chưa có học viên nào nộp bài.</p></div>';
                 } else {
-                    // Sử dụng Index để tránh lỗi cú pháp khi truyền tham số chuỗi
+                  
                     data.forEach((s, index) => {
                         let statusBadge = s.score !== null
                             ? `<span class="badge bg-success"><i class="bi bi-check-all"></i> ${s.score} điểm</span>`
@@ -626,7 +624,7 @@
             });
         }
 
-        // Hàm mở modal chấm bài dựa trên index
+      
         function openGradingModalByIndex(index) {
             const s = submissionsData[index];
             currentProgressId = s.progressId;
@@ -639,7 +637,7 @@
             viewer.empty();
 
             if (s.isText) {
-                // Decode nội dung và hiển thị (s.contentPreview đã được xử lý ở server)
+               
                 viewer.html(`<div class="bg-white p-3 border rounded" style="font-family: monospace; white-space: pre-wrap;">${s.contentPreview}</div>`);
             } else if (s.submissionUrl) {
                 let fileName = s.submissionUrl.split('/').pop();
@@ -684,11 +682,7 @@
             });
         }
 
-        // ==========================================
-        // LOGIC TẠO BÀI TẬP (TAB 3)
-        // ==========================================
-
-        // Xử lý Dropdown Chương
+      
         document.getElementById('courseSelect')?.addEventListener('change', function() {
             var courseId = this.value;
             var chapterSelect = document.getElementById('chapterSelect');
