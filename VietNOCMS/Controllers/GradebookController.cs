@@ -19,27 +19,24 @@ namespace VietNOCMS.Controllers
             _context = context;
         }
 
-        // ==========================================
-        // 1. XEM BẢNG ĐIỂM (View)
-        // ==========================================
+      
         public async Task<IActionResult> Index(int courseId)
         {
-            // Lấy danh sách học viên trong khóa
+           
             var enrollments = await _context.Enrollments
-                .Include(e => e.Student) // SỬA: Dùng Student thay vì User
+                .Include(e => e.Student) 
                 .Include(e => e.Course)
                 .Where(e => e.CourseId == courseId)
                 .ToListAsync();
 
-            // Lấy danh sách các bài tập (Đầu điểm)
-            // Logic: Lesson nằm trong Chapter, Chapter nằm trong Course
+          
             var assignments = await _context.Lessons
                 .Include(l => l.Chapter)
                 .Where(l => l.Chapter.CourseId == courseId && l.LessonType == "Assignment")
-                .OrderBy(l => l.OrderIndex) // Sắp xếp theo thứ tự bài học
+                .OrderBy(l => l.OrderIndex) 
                 .ToListAsync();
 
-            // Truyền dữ liệu sang View
+           
             ViewBag.Assignments = assignments;
             ViewBag.CourseId = courseId;
             ViewBag.CourseName = enrollments.FirstOrDefault()?.Course?.CourseName ?? "Khóa học";
@@ -47,24 +44,22 @@ namespace VietNOCMS.Controllers
             return View(enrollments);
         }
 
-        // ==========================================
-        // 2. TÍNH ĐIỂM TỔNG KẾT (Logic)
-        // ==========================================
+      
         [HttpPost]
         public async Task<IActionResult> CalculateGrades(int courseId)
         {
-            // Lấy tất cả học viên
+           
             var enrollments = await _context.Enrollments
                 .Where(e => e.CourseId == courseId)
                 .ToListAsync();
 
-            // Lấy tất cả đầu bài tập bắt buộc
+           
             var assignments = await _context.Lessons
                 .Include(l => l.Chapter)
                 .Where(l => l.Chapter.CourseId == courseId && l.LessonType == "Assignment")
                 .ToListAsync();
 
-            // Nếu không có bài tập nào thì không tính
+           
             if (assignments.Count == 0)
             {
                 return Json(new { success = false, message = "Khóa học này chưa có bài tập nào để tính điểm." });
@@ -72,8 +67,7 @@ namespace VietNOCMS.Controllers
 
             foreach (var enr in enrollments)
             {
-                // Lấy điểm các bài đã làm của học viên này
-                // Lọc theo EnrollmentId là chính xác nhất
+               
                 var submissions = await _context.LessonProgresses
                     .Include(p => p.Lesson)
                     .Where(p =>
@@ -82,16 +76,16 @@ namespace VietNOCMS.Controllers
                     )
                     .ToListAsync();
 
-                // Tính tổng điểm
+               
                 double totalScore = submissions.Sum(s => s.Score ?? 0);
 
-                // Công thức: Tổng điểm / Tổng số bài tập (bao gồm cả bài chưa làm - tính là 0)
+               
                 double finalScore = totalScore / assignments.Count;
 
-                // Làm tròn 1 chữ số thập phân
+              
                 enr.FinalScore = Math.Round(finalScore, 1);
 
-                // Logic Xếp loại (Thang điểm 10)
+             
                 if (enr.FinalScore >= 9.0) enr.Rank = "Xuất sắc";
                 else if (enr.FinalScore >= 8.0) enr.Rank = "Giỏi";
                 else if (enr.FinalScore >= 6.5) enr.Rank = "Khá";
@@ -109,9 +103,7 @@ namespace VietNOCMS.Controllers
             return Json(new { success = true, message = "Đã tính toán và cập nhật điểm số thành công!" });
         }
 
-        // ==========================================
-        // 3. XUẤT FILE EXCEL (ClosedXML)
-        // ==========================================
+        
         public async Task<IActionResult> ExportExcel(int courseId)
         {
             // 1. Lấy dữ liệu
@@ -200,7 +192,7 @@ namespace VietNOCMS.Controllers
             }
         }
 
-        // Hàm phụ trợ: Xóa dấu tiếng Việt để đặt tên file không bị lỗi
+      
         private static readonly string[] VietnameseSigns = new string[]
         {
             "aAeEoOuUiIdDyY",

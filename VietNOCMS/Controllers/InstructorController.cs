@@ -957,48 +957,127 @@ namespace VietNOCMS.Controllers
         }
    
         [HttpPost]
-        public async Task<IActionResult> UpdateLesson(int lessonId, string title, int duration, bool isFree, IFormFile? videoFile, IFormFile? documentFile, string lessonType, DateTime? startTime, string? meetingLink, string? content)
+        [HttpPost]
+        public async Task<IActionResult> UpdateLesson(
+    int lessonId,
+    string title,
+    int duration,
+    bool isFree,
+    IFormFile? videoFile,
+    IFormFile? documentFile,
+    string lessonType,
+    DateTime? startTime,
+    string? meetingLink,
+    string? content,
+    string? youtubeUrl) // <--- Đã thêm tham số này
         {
+            // 1. TÌM BÀI HỌC
             var lesson = await _context.Lessons
-         .Include(l => l.Chapter) 
-         .FirstOrDefaultAsync(l => l.LessonId == lessonId);
+                .Include(l => l.Chapter)
+                .FirstOrDefaultAsync(l => l.LessonId == lessonId);
+
             if (lesson == null) return Json(new { success = false, message = "Không tìm thấy bài học." });
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // 2. CHECK QUYỀN
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdClaim, out int userId)) return Json(new { success = false, message = "Lỗi xác thực." });
+
             if (!await _authService.AuthorizeAsync(userId, lesson.Chapter.CourseId, CoursePermission.ManageContent))
             {
                 return Json(new { success = false, message = "Không có quyền sửa bài học này." });
             }
+
+            // 3. CẬP NHẬT THÔNG TIN CƠ BẢN
             lesson.LessonName = title;
             lesson.DurationInMinutes = duration;
             lesson.IsFree = isFree;
             lesson.Content = content;
 
-         
-            lesson.LessonType = (lessonType == "meeting" || lessonType == "stream") ? "Meeting" : "Video";
-            lesson.StartTime = (lessonType == "meeting" || lessonType == "stream") ? startTime : null;
-            lesson.MeetingLink = (lessonType == "meeting" || lessonType == "stream") ? meetingLink : null;
+            // 4. XỬ LÝ LOGIC LOẠI BÀI HỌC (Meeting vs Video)
+            string typeNormalized = lessonType?.ToLower().Trim() ?? "";
+            bool isMeeting = (typeNormalized == "meeting" || typeNormalized == "stream");
 
-           
-            if (videoFile != null && lessonType != "meeting" && lessonType != "stream")
+            lesson.LessonType = isMeeting ? "Meeting" : "Video";
+
+            if (isMeeting)
             {
-                string folder = Path.Combine(_webHostEnvironment.WebRootPath, "videos");
-                string fileName = Guid.NewGuid() + "_" + videoFile.FileName;
-                using (var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create))
+                // --- TRƯỜNG HỢP: MEETING ---
+                lesson.StartTime = startTime;
+                lesson.MeetingLink = meetingLink;
+
+                // QUAN TRỌNG: Xóa VideoUrl cũ để Frontend hiển thị đúng giao diện Meeting
+                if (!string.IsNullOrEmpty(lesson.VideoUrl))
                 {
-                    await videoFile.CopyToAsync(stream);
+                    // Xóa file vật lý để dọn rác server (Nếu là file upload)
+                    if (lesson.VideoUrl.StartsWith("/videos"))
+                    {
+                        string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, lesson.VideoUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                    }
+                    lesson.VideoUrl = null; // Xóa trong Database
                 }
-                lesson.VideoUrl = "/videos/" + fileName;
+            }
+            else
+            {
+                // --- TRƯỜNG HỢP: VIDEO (Upload hoặc YouTube) ---
+                lesson.StartTime = null;
+                lesson.MeetingLink = null;
+
+                // Xử lý Video
+                if (videoFile != null)
+                {
+                    // A. UPLOAD FILE MỚI
+                    string folder = Path.Combine(_webHostEnvironment.WebRootPath, "videos");
+                    if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                    string fileName = Guid.NewGuid() + Path.GetExtension(videoFile.FileName); // Giữ đuôi file gốc
+                    using (var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create))
+                    {
+                        await videoFile.CopyToAsync(stream);
+                    }
+
+                    // Xóa file cũ nếu có
+                    if (!string.IsNullOrEmpty(lesson.VideoUrl) && lesson.VideoUrl.StartsWith("/videos"))
+                    {
+                        string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, lesson.VideoUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                    }
+
+                    lesson.VideoUrl = "/videos/" + fileName;
+                }
+                else if (!string.IsNullOrEmpty(youtubeUrl))
+                {
+                    // B. LINK YOUTUBE
+                    // Nếu trước đó là file upload thì xóa đi cho nhẹ server
+                    if (!string.IsNullOrEmpty(lesson.VideoUrl) && lesson.VideoUrl.StartsWith("/videos"))
+                    {
+                        string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, lesson.VideoUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                    }
+
+                    lesson.VideoUrl = youtubeUrl;
+                }
             }
 
-         
+            // 5. XỬ LÝ TÀI LIỆU (DOCUMENT)
             if (documentFile != null)
             {
                 string folder = Path.Combine(_webHostEnvironment.WebRootPath, "documents");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
                 string fileName = Guid.NewGuid() + "_" + documentFile.FileName;
                 using (var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create))
                 {
                     await documentFile.CopyToAsync(stream);
                 }
+
+                // Xóa tài liệu cũ
+                if (!string.IsNullOrEmpty(lesson.DocumentUrl))
+                {
+                    string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, lesson.DocumentUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                }
+
                 lesson.DocumentUrl = "/documents/" + fileName;
             }
 
@@ -1469,6 +1548,59 @@ namespace VietNOCMS.Controllers
 
               
                 return Json(new { success = true, message = "Cập nhật hồ sơ thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
+        [HttpPost]
+        public async Task<IActionResult> DeleteChapter(int id)
+        {
+            // 1. Tìm chương và Include luôn các bài học để lấy đường dẫn file cần xóa
+            var chapter = await _context.Chapters
+                .Include(c => c.Lessons)
+                .FirstOrDefaultAsync(c => c.ChapterId == id);
+
+            if (chapter == null) return Json(new { success = false, message = "Không tìm thấy chương học." });
+
+            // 2. Check quyền (User hiện tại có phải chủ khóa học không)
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // Lưu ý: Cần check quyền trên CourseId của chương đó
+            if (!await _authService.AuthorizeAsync(userId, chapter.CourseId, CoursePermission.ManageContent))
+            {
+                return Json(new { success = false, message = "Bạn không có quyền xóa chương này." });
+            }
+
+            try
+            {
+                // 3. DỌN DẸP FILE RÁC (Video/Docs) của tất cả bài học trong chương
+                foreach (var lesson in chapter.Lessons)
+                {
+                    // Xóa Video
+                    if (!string.IsNullOrEmpty(lesson.VideoUrl) && lesson.VideoUrl.StartsWith("/videos/"))
+                    {
+                        var path = Path.Combine(_webHostEnvironment.WebRootPath, lesson.VideoUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+                    }
+                    // Xóa Tài liệu
+                    if (!string.IsNullOrEmpty(lesson.DocumentUrl) && lesson.DocumentUrl.StartsWith("/documents/"))
+                    {
+                        var path = Path.Combine(_webHostEnvironment.WebRootPath, lesson.DocumentUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+                    }
+
+                    // Xóa LessonProgress (Tiến độ học tập) liên quan để tránh lỗi khóa ngoại
+                    var relatedProgress = _context.LessonProgresses.Where(lp => lp.LessonId == lesson.LessonId);
+                    _context.LessonProgresses.RemoveRange(relatedProgress);
+                }
+
+                // 4. Xóa Chương (DB sẽ tự Cascade xóa Lessons, nhưng ta đã xóa file vật lý ở trên)
+                _context.Chapters.Remove(chapter);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
             }
             catch (Exception ex)
             {

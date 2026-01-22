@@ -102,9 +102,9 @@ namespace VietNOCMS.Controllers
                     viewModel.TotalRevenue = 0;
                 }
                 viewModel.Notifications = await _context.Notifications
-                    .Where(n => n.UserId == userId)            // Chỉ lấy thông báo của user này
-                    .OrderByDescending(n => n.CreatedAt)       // Thông báo mới nhất lên đầu
-                    .Take(10)                                  // Chỉ lấy 10 thông báo gần nhất để tránh lag
+                    .Where(n => n.UserId == userId)           
+                    .OrderByDescending(n => n.CreatedAt)       
+                    .Take(3)                                  
                     .ToListAsync();
 
                 var reviewQuery = _context.Reviews.Where(r => courseIds.Contains(r.CourseId));

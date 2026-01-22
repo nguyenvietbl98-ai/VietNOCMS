@@ -12,7 +12,7 @@ namespace VietNOCMS.Services
 
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
-            stream.Position = 0; // Reset con trỏ về đầu file
+            stream.Position = 0; 
 
             var extension = Path.GetExtension(file.FileName).ToLower();
 
@@ -25,7 +25,7 @@ namespace VietNOCMS.Services
                 _ => throw new Exception("Định dạng file không hỗ trợ!")
             };
         }
-        // HÀM MỚI: Hỗ trợ đọc từ đường dẫn file trên server
+
         public static string ParseLocalFile(string filePath)
         {
             if (!File.Exists(filePath)) throw new FileNotFoundException("Không tìm thấy file tài liệu trên server.");
@@ -35,7 +35,7 @@ namespace VietNOCMS.Services
             return ParseStream(stream, extension);
         }
 
-        // Logic cốt lõi (Tách riêng để tái sử dụng)
+   
         private static string ParseStream(Stream stream, string extension)
         {
             return extension switch

@@ -3,13 +3,13 @@ using System.Net.Mail;
 
 namespace VietNOCMS.Services
 {
-    // 1. Định nghĩa Interface
+ 
     public interface IEmailService
     {
         Task SendEmailAsync(string toEmail, string subject, string message);
     }
 
-    // 2. Triển khai (Implementation)
+
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
@@ -21,7 +21,7 @@ namespace VietNOCMS.Services
 
         public async Task SendEmailAsync(string toEmail, string subject, string messageBody)
         {
-            // Lấy cấu hình từ appsettings.json
+           
             var mailSettings = _configuration.GetSection("MailSettings");
 
             string fromEmail = mailSettings["Mail"];
@@ -37,7 +37,7 @@ namespace VietNOCMS.Services
 
             var mailMessage = new MailMessage(fromEmail, toEmail, subject, messageBody)
             {
-                IsBodyHtml = true // Cho phép gửi HTML
+                IsBodyHtml = true 
             };
 
             await client.SendMailAsync(mailMessage);

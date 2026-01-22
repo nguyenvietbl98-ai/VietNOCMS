@@ -22,7 +22,7 @@ namespace VietNOCMS.Controllers
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var model = new RecruitmentCenterViewModel();
 
-            // 1. Lấy danh sách tin tuyển dụng (Code cũ)
+           
             model.MarketPosts = await _context.Courses
                 .Include(c => c.Instructor)
                 .Include(c => c.Category)
@@ -30,13 +30,13 @@ namespace VietNOCMS.Controllers
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
-            // 2. Lấy danh sách khóa của tôi (Code cũ)
+        
             model.MyCourses = await _context.Courses
                 .Where(c => c.InstructorId == userId)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
-            // 3. Lấy đơn chờ duyệt của tôi (Code cũ)
+         
             model.PendingApplications = await _context.CourseCollaborators
                 .Include(cc => cc.Collaborator)
                 .Include(cc => cc.Course)
@@ -44,13 +44,12 @@ namespace VietNOCMS.Controllers
                 .OrderByDescending(cc => cc.InvitedAt)
                 .ToListAsync();
 
-            // --- PHẦN MỚI THÊM: KIỂM TRA TRẠNG THÁI CỦA TÔI ---
-            // Tìm xem User này đã dính dáng gì tới các khóa học đang tuyển chưa
+          
             var myApplications = await _context.CourseCollaborators
                 .Where(cc => cc.CollaboratorId == userId)
                 .ToListAsync();
 
-            // Đổ vào Dictionary để View dễ tra cứu
+         
             foreach (var app in myApplications)
             {
                 if (!model.MyStatus.ContainsKey(app.CourseId))
@@ -58,7 +57,7 @@ namespace VietNOCMS.Controllers
                     model.MyStatus.Add(app.CourseId, app.Status);
                 }
             }
-            // --------------------------------------------------
+           
 
             return View(model);
         }

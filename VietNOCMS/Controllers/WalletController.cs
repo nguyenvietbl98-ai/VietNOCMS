@@ -75,7 +75,6 @@ namespace VietNOCMS.Controllers
 
             _context.Wallet.Add(transaction);
 
-            // --- THÊM ĐOẠN NÀY ĐỂ TẠO THÔNG BÁO ---
             await CreateNotification(
                 userId: userId,
                 title: "Nạp tiền thành công",
@@ -86,7 +85,7 @@ namespace VietNOCMS.Controllers
             );
             // --------------------------------------
 
-            await _context.SaveChangesAsync(); // Lưu cả giao dịch và thông báo
+            await _context.SaveChangesAsync(); 
 
             TempData["SuccessMessage"] = $"Đã nạp thành công {amountDec:N0}₫ vào tài khoản.";
             return RedirectToAction("Index");
@@ -111,7 +110,7 @@ namespace VietNOCMS.Controllers
             // 1. Trừ tiền
             user.Balance -= amountDec;
 
-            // 2. Lưu lịch sử (Trạng thái Pending)
+
             var transaction = new Wallet
             {
                 UserId = userId,
@@ -123,7 +122,7 @@ namespace VietNOCMS.Controllers
 
             _context.Wallet.Add(transaction);
 
-            // 3. --- THÊM CODE THÔNG BÁO: YÊU CẦU RÚT TIỀN ---
+          
             await CreateNotification(
                 userId: userId,
                 title: "Yêu cầu rút tiền",
